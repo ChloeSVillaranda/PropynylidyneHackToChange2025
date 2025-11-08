@@ -461,6 +461,45 @@ const options: OAS3Options = {
           }
         }
       },
+      "/drones/{id}/detail": {
+        get: {
+          tags: ["Drones"],
+          summary: "Get drone with assigned missions",
+          parameters: [
+            {
+              in: "path",
+              name: "id",
+              required: true,
+              schema: { type: "string" }
+            }
+          ],
+          responses: {
+            "200": {
+              description: "Drone detail with mission list",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      data: {
+                        type: "object",
+                        properties: {
+                          drone: { $ref: "#/components/schemas/Drone" },
+                          missions: {
+                            type: "array",
+                            items: { $ref: "#/components/schemas/Mission" }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "404": { description: "Not found" }
+          }
+        }
+      },
       "/drones/{id}/images": {
         get: {
           tags: ["Drone Images"],
