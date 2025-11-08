@@ -8,6 +8,7 @@ import {
 import {
   createDroneHandler,
   getDrone,
+  getDroneDetail,
   getDroneLocation,
   getDrones,
   removeDrone,
@@ -19,6 +20,7 @@ const router = Router();
 
 router.get("/", getDrones);
 router.post("/", createDroneHandler);
+router.get("/:id/detail", getDroneDetail);
 router.get("/:id", getDrone);
 router.put("/:id", updateDroneHandler);
 router.delete("/:id", removeDrone);
