@@ -5,7 +5,10 @@ import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
 import Header from './components/Header';
 import Login from './pages/Login';
+import ManageDrones from './pages/ManageDrones';
+import ManageMissions from './pages/ManageMissions';
 import Settings from './pages/Settings';
+import ViewDrones from './pages/ViewDrones';
 import { useState } from 'react';
 
 function App() {
@@ -19,6 +22,9 @@ function App() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/login" element={<Login setIsLoggedIn={setIsLoggedIn} />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/manage-drones" element={<ManageDrones />} />
+          <Route path="/manage-missions" element={<ManageMissions />} />
+          <Route path="/view-drones" element={<ViewDrones />} />
         </Routes>
       </div>
     </Router>
