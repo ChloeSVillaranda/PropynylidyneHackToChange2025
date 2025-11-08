@@ -1,21 +1,20 @@
-import { useState } from 'react';
-import { CreateMissionRequest, MissionType, RoutePoint } from '../types';
+import { useState, useEffect } from 'react';
+import { Mission, MissionType, RoutePoint } from '../types';
 
-interface CreateMissionModalProps {
+interface MissionDetailsModalProps {
+  mission: Mission;
   onClose: () => void;
-  onCreate: (missionData: CreateMissionRequest) => void;
+  onUpdate: (mission: Mission) => void;
   loading: boolean;
 }
 
-function CreateMissionModal({ onClose, onCreate, loading }: CreateMissionModalProps) {
-  const [formData, setFormData] = useState<CreateMissionRequest>({
-    droneId: '',
-    missionType: 'Patrol',
-    startTime: '',
-    endTime: '',
-    route: []
-  });
+function MissionDetailsModal({ mission, onClose, onUpdate, loading }: MissionDetailsModalProps) {
+  const [formData, setFormData] = useState<Mission>(mission);
   const [newWaypoint, setNewWaypoint] = useState({ latitude: 0, longitude: 0 });
+
+  useEffect(() => {
+    setFormData(mission);
+  }, [mission]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -44,7 +43,7 @@ function CreateMissionModal({ onClose, onCreate, loading }: CreateMissionModalPr
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onCreate(formData);
+    onUpdate(formData);
   };
 
   return (
@@ -76,7 +75,7 @@ function CreateMissionModal({ onClose, onCreate, loading }: CreateMissionModalPr
         onClick={(e) => e.stopPropagation()}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-          <h2 style={{ margin: 0 }}>Create New Mission</h2>
+          <h2 style={{ margin: 0 }}>Edit Mission</h2>
           <button
             onClick={onClose}
             style={{
@@ -95,20 +94,19 @@ function CreateMissionModal({ onClose, onCreate, loading }: CreateMissionModalPr
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '1rem' }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-              Drone ID *
+              Drone ID
             </label>
             <input
               type="text"
               name="droneId"
               value={formData.droneId}
-              onChange={handleChange}
-              required
-              placeholder="e.g., drone-001"
+              disabled
               style={{
                 width: '100%',
                 padding: '0.5rem',
                 border: '1px solid #ccc',
                 borderRadius: '4px',
+                backgroundColor: '#f5f5f5',
                 boxSizing: 'border-box'
               }}
             />
@@ -130,6 +128,7 @@ function CreateMissionModal({ onClose, onCreate, loading }: CreateMissionModalPr
                 boxSizing: 'border-box'
               }}
             >
+              <option value="">Select Type</option>
               <option value="Patrol">Patrol</option>
               <option value="Emergency">Emergency</option>
               <option value="Delivery">Delivery</option>
@@ -145,7 +144,7 @@ function CreateMissionModal({ onClose, onCreate, loading }: CreateMissionModalPr
             <input
               type="datetime-local"
               name="startTime"
-              value={formData.startTime}
+              value={formData.startTime ? new Date(formData.startTime).toISOString().slice(0, 16) : ''}
               onChange={handleChange}
               style={{
                 width: '100%',
@@ -164,7 +163,7 @@ function CreateMissionModal({ onClose, onCreate, loading }: CreateMissionModalPr
             <input
               type="datetime-local"
               name="endTime"
-              value={formData.endTime}
+              value={formData.endTime ? new Date(formData.endTime).toISOString().slice(0, 16) : ''}
               onChange={handleChange}
               style={{
                 width: '100%',
@@ -270,7 +269,7 @@ function CreateMissionModal({ onClose, onCreate, loading }: CreateMissionModalPr
                 opacity: loading ? 0.6 : 1
               }}
             >
-              {loading ? 'Creating...' : 'Create Mission'}
+              {loading ? 'Updating...' : 'Update Mission'}
             </button>
           </div>
         </form>
@@ -279,4 +278,4 @@ function CreateMissionModal({ onClose, onCreate, loading }: CreateMissionModalPr
   );
 }
 
-export default CreateMissionModal;
+export default MissionDetailsModal;

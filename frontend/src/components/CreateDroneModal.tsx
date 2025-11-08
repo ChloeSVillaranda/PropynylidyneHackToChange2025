@@ -1,21 +1,20 @@
 import { useState } from 'react';
-import { CreateMissionRequest, MissionType, RoutePoint } from '../types';
+import { CreateDroneRequest, DroneStatus } from '../types';
 
-interface CreateMissionModalProps {
+interface CreateDroneModalProps {
   onClose: () => void;
-  onCreate: (missionData: CreateMissionRequest) => void;
+  onCreate: (droneData: CreateDroneRequest) => void;
   loading: boolean;
 }
 
-function CreateMissionModal({ onClose, onCreate, loading }: CreateMissionModalProps) {
-  const [formData, setFormData] = useState<CreateMissionRequest>({
+function CreateDroneModal({ onClose, onCreate, loading }: CreateDroneModalProps) {
+  const [formData, setFormData] = useState<CreateDroneRequest>({
     droneId: '',
-    missionType: 'Patrol',
-    startTime: '',
-    endTime: '',
-    route: []
+    model: '',
+    status: 'Available',
+    currentLocation: { latitude: 0, longitude: 0 },
+    metadata: { firmware: '', batteryLevel: 100 }
   });
-  const [newWaypoint, setNewWaypoint] = useState({ latitude: 0, longitude: 0 });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -25,20 +24,23 @@ function CreateMissionModal({ onClose, onCreate, loading }: CreateMissionModalPr
     }));
   };
 
-  const handleAddWaypoint = () => {
-    if (newWaypoint.latitude !== 0 || newWaypoint.longitude !== 0) {
-      setFormData(prev => ({
-        ...prev,
-        route: [...(prev.route || []), newWaypoint]
-      }));
-      setNewWaypoint({ latitude: 0, longitude: 0 });
-    }
-  };
-
-  const handleRemoveWaypoint = (index: number) => {
+  const handleLocationChange = (field: 'latitude' | 'longitude', value: string) => {
     setFormData(prev => ({
       ...prev,
-      route: prev.route?.filter((_, i) => i !== index)
+      currentLocation: {
+        latitude: field === 'latitude' ? parseFloat(value) : prev.currentLocation?.latitude || 0,
+        longitude: field === 'longitude' ? parseFloat(value) : prev.currentLocation?.longitude || 0,
+      }
+    }));
+  };
+
+  const handleMetadataChange = (field: 'firmware' | 'batteryLevel', value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      metadata: {
+        firmware: field === 'firmware' ? value : prev.metadata?.firmware || '',
+        batteryLevel: field === 'batteryLevel' ? parseInt(value) : prev.metadata?.batteryLevel || 0,
+      }
     }));
   };
 
@@ -76,7 +78,7 @@ function CreateMissionModal({ onClose, onCreate, loading }: CreateMissionModalPr
         onClick={(e) => e.stopPropagation()}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-          <h2 style={{ margin: 0 }}>Create New Mission</h2>
+          <h2 style={{ margin: 0 }}>Create New Drone</h2>
           <button
             onClick={onClose}
             style={{
@@ -116,11 +118,32 @@ function CreateMissionModal({ onClose, onCreate, loading }: CreateMissionModalPr
 
           <div style={{ marginBottom: '1rem' }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-              Mission Type
+              Model *
+            </label>
+            <input
+              type="text"
+              name="model"
+              value={formData.model}
+              onChange={handleChange}
+              required
+              placeholder="e.g., DJI-M300"
+              style={{
+                width: '100%',
+                padding: '0.5rem',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                boxSizing: 'border-box'
+              }}
+            />
+          </div>
+
+          <div style={{ marginBottom: '1rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+              Status
             </label>
             <select
-              name="missionType"
-              value={formData.missionType || ''}
+              name="status"
+              value={formData.status}
               onChange={handleChange}
               style={{
                 width: '100%',
@@ -130,119 +153,86 @@ function CreateMissionModal({ onClose, onCreate, loading }: CreateMissionModalPr
                 boxSizing: 'border-box'
               }}
             >
-              <option value="Patrol">Patrol</option>
-              <option value="Emergency">Emergency</option>
-              <option value="Delivery">Delivery</option>
-              <option value="Survey">Survey</option>
-              <option value="Inspection">Inspection</option>
+              <option value="Available">Available</option>
+              <option value="Busy">Busy</option>
+              <option value="Maintenance">Maintenance</option>
             </select>
           </div>
 
           <div style={{ marginBottom: '1rem' }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-              Start Time
+              Current Location
             </label>
-            <input
-              type="datetime-local"
-              name="startTime"
-              value={formData.startTime}
-              onChange={handleChange}
-              style={{
-                width: '100%',
-                padding: '0.5rem',
-                border: '1px solid #ccc',
-                borderRadius: '4px',
-                boxSizing: 'border-box'
-              }}
-            />
-          </div>
-
-          <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-              End Time
-            </label>
-            <input
-              type="datetime-local"
-              name="endTime"
-              value={formData.endTime}
-              onChange={handleChange}
-              style={{
-                width: '100%',
-                padding: '0.5rem',
-                border: '1px solid #ccc',
-                borderRadius: '4px',
-                boxSizing: 'border-box'
-              }}
-            />
-          </div>
-
-          <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-              Route Waypoints
-            </label>
-            <div style={{ border: '1px solid #ccc', borderRadius: '4px', padding: '0.5rem', maxHeight: '150px', overflow: 'auto' }}>
-              {formData.route && formData.route.length > 0 ? (
-                formData.route.map((waypoint, index) => (
-                  <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.25rem 0', borderBottom: '1px solid #eee' }}>
-                    <span style={{ fontSize: '0.9rem' }}>
-                      {index + 1}. Lat: {waypoint.latitude.toFixed(4)}, Lng: {waypoint.longitude.toFixed(4)}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveWaypoint(index)}
-                      style={{ background: 'none', border: 'none', color: '#f44336', cursor: 'pointer', fontSize: '1.2rem' }}
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))
-              ) : (
-                <p style={{ margin: 0, color: '#666', fontSize: '0.9rem' }}>No waypoints added</p>
-              )}
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '0.5rem', marginTop: '0.5rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
               <input
                 type="number"
                 step="any"
                 placeholder="Latitude"
-                value={newWaypoint.latitude || ''}
-                onChange={(e) => setNewWaypoint(prev => ({ ...prev, latitude: parseFloat(e.target.value) || 0 }))}
+                value={formData.currentLocation?.latitude || ''}
+                onChange={(e) => handleLocationChange('latitude', e.target.value)}
                 style={{
                   padding: '0.5rem',
                   border: '1px solid #ccc',
-                  borderRadius: '4px'
+                  borderRadius: '4px',
+                  boxSizing: 'border-box'
                 }}
               />
               <input
                 type="number"
                 step="any"
                 placeholder="Longitude"
-                value={newWaypoint.longitude || ''}
-                onChange={(e) => setNewWaypoint(prev => ({ ...prev, longitude: parseFloat(e.target.value) || 0 }))}
+                value={formData.currentLocation?.longitude || ''}
+                onChange={(e) => handleLocationChange('longitude', e.target.value)}
                 style={{
                   padding: '0.5rem',
                   border: '1px solid #ccc',
-                  borderRadius: '4px'
+                  borderRadius: '4px',
+                  boxSizing: 'border-box'
                 }}
               />
-              <button
-                type="button"
-                onClick={handleAddWaypoint}
-                style={{
-                  padding: '0.5rem 1rem',
-                  backgroundColor: '#2196F3',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
-                }}
-              >
-                Add
-              </button>
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
+          <div style={{ marginBottom: '1rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+              Firmware Version
+            </label>
+            <input
+              type="text"
+              placeholder="e.g., v1.2.0"
+              value={formData.metadata?.firmware || ''}
+              onChange={(e) => handleMetadataChange('firmware', e.target.value)}
+              style={{
+                width: '100%',
+                padding: '0.5rem',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                boxSizing: 'border-box'
+              }}
+            />
+          </div>
+
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+              Battery Level (%)
+            </label>
+            <input
+              type="number"
+              min="0"
+              max="100"
+              value={formData.metadata?.batteryLevel || ''}
+              onChange={(e) => handleMetadataChange('batteryLevel', e.target.value)}
+              style={{
+                width: '100%',
+                padding: '0.5rem',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                boxSizing: 'border-box'
+              }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
             <button
               type="button"
               onClick={onClose}
@@ -270,7 +260,7 @@ function CreateMissionModal({ onClose, onCreate, loading }: CreateMissionModalPr
                 opacity: loading ? 0.6 : 1
               }}
             >
-              {loading ? 'Creating...' : 'Create Mission'}
+              {loading ? 'Creating...' : 'Create Drone'}
             </button>
           </div>
         </form>
@@ -279,4 +269,4 @@ function CreateMissionModal({ onClose, onCreate, loading }: CreateMissionModalPr
   );
 }
 
-export default CreateMissionModal;
+export default CreateDroneModal;

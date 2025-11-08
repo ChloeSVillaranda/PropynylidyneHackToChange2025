@@ -1,123 +1,123 @@
-import { useState } from 'react';
-import MissionModal from '../components/MissionModal';
-import CreateMissionModal from '../components/CreateMissionModal';
-import { missionService } from '../api';
-
-interface Mission {
-  id: string;
-  name: string;
-  description: string;
-  droneId: string;
-  status: string;
-  createdAt: string;
-}
+import { useState, useEffect } from 'react';
+import { droneService } from '../api';
+import { Drone } from '../types';
+import DroneModal from '../components/DroneModal';
+import CreateDroneModal from '../components/CreateDroneModal';
 
 function ManageDrones() {
-  const [missions, setMissions] = useState<Mission[]>([]);
-  const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [drones, setDrones] = useState<Drone[]>([]);
+  const [selectedDrone, setSelectedDrone] = useState<Drone | null>(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [missionId, setMissionId] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleCreateMission = async (missionData: { name: string; description: string }) => {
+  useEffect(() => {
+    fetchAllDrones();
+  }, []);
+
+  const fetchAllDrones = async () => {
     setLoading(true);
     setError('');
     try {
+      // Uncomment when backend is ready
+      // const fetchedDrones = await droneService.getAllDrones();
+      
       // Mock data for now
-      const newMission: Mission = {
-        id: Date.now().toString(),
-        name: missionData.name,
-        description: missionData.description,
-        droneId: 'DRONE-001',
-        status: 'pending',
-        createdAt: new Date().toISOString(),
+      const fetchedDrones: Drone[] = [
+        {
+          droneId: 'drone-001',
+          entityType: 'DRONE',
+          model: 'DJI-M300',
+          status: 'Available',
+          currentLocation: { latitude: 34.0522, longitude: -118.2437 },
+          metadata: { firmware: 'v1.2.0', batteryLevel: 87 },
+          lastImageTimestamp: '2025-11-08T20:16:42.395Z',
+        },
+        {
+          droneId: 'drone-002',
+          entityType: 'DRONE',
+          model: 'Skydio-X2',
+          status: 'Maintenance',
+          currentLocation: { latitude: 36.1699, longitude: -115.1398 },
+          metadata: { firmware: 'v1.1.5', batteryLevel: 45 },
+        },
+      ];
+      
+      setDrones(fetchedDrones);
+    } catch (err) {
+      setError('Failed to fetch drones');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleViewDrone = (drone: Drone) => {
+    setSelectedDrone(drone);
+    setIsViewModalOpen(true);
+  };
+
+  const handleCreateDrone = async (droneData: any) => {
+    setLoading(true);
+    setError('');
+    try {
+      // Uncomment when backend is ready
+      // const newDrone = await droneService.createDrone(droneData);
+      
+      // Mock data for now
+      const newDrone: Drone = {
+        ...droneData,
+        entityType: 'DRONE',
       };
       
-      // Uncomment when backend is ready
-      // const newMission = await missionService.createMission(missionData);
-      
-      setMissions([...missions, newMission]);
+      setDrones([...drones, newDrone]);
       setIsCreateModalOpen(false);
-      alert('Mission created successfully!');
+      alert('Drone created successfully!');
     } catch (err) {
-      setError('Failed to create mission');
+      setError('Failed to create drone');
       console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleViewMissionById = async () => {
-    if (!missionId.trim()) {
-      setError('Please enter a mission ID');
-      return;
-    }
-    
+  const handleUpdateDrone = async (updatedDrone: Drone) => {
     setLoading(true);
     setError('');
     try {
-      // Mock data for now
-      const mission: Mission = {
-        id: missionId,
-        name: `Mission ${missionId}`,
-        description: 'Sample mission description',
-        droneId: 'DRONE-001',
-        status: 'active',
-        createdAt: new Date().toISOString(),
-      };
-      
       // Uncomment when backend is ready
-      // const mission = await missionService.getMissionById(missionId);
+      // await droneService.updateDrone(updatedDrone.droneId, updatedDrone);
       
-      setSelectedMission(mission);
-      setIsModalOpen(true);
-    } catch (err) {
-      setError('Failed to fetch mission');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleViewMission = (mission: Mission) => {
-    setSelectedMission(mission);
-    setIsModalOpen(true);
-  };
-
-  const handleUpdateMission = async (updatedMission: Mission) => {
-    setLoading(true);
-    setError('');
-    try {
       // Mock update for now
-      const updatedMissions = missions.map(m => 
-        m.id === updatedMission.id ? updatedMission : m
+      const updatedDrones = drones.map(d => 
+        d.droneId === updatedDrone.droneId ? updatedDrone : d
       );
       
-      // Uncomment when backend is ready
-      // await missionService.updateMission(updatedMission.id, updatedMission);
-      
-      setMissions(updatedMissions);
-      setIsModalOpen(false);
-      setSelectedMission(null);
-      alert('Mission updated successfully!');
+      setDrones(updatedDrones);
+      setIsViewModalOpen(false);
+      setSelectedDrone(null);
+      alert('Drone updated successfully!');
     } catch (err) {
-      setError('Failed to update mission');
+      setError('Failed to update drone');
       console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setSelectedMission(null);
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Available': return '#4CAF50';
+      case 'Busy': return '#FF9800';
+      case 'Maintenance': return '#f44336';
+      default: return '#9e9e9e';
+    }
   };
 
   return (
     <div style={{ padding: '2rem' }}>
-      <h2>Manage Drones & Missions</h2>
+      <h2>Manage Drones</h2>
       
       {error && (
         <div style={{ padding: '1rem', backgroundColor: '#ffebee', color: '#c62828', marginBottom: '1rem', borderRadius: '4px' }}>
@@ -125,7 +125,7 @@ function ManageDrones() {
         </div>
       )}
 
-      <div style={{ marginBottom: '2rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+      <div style={{ marginBottom: '2rem' }}>
         <button 
           onClick={() => setIsCreateModalOpen(true)}
           disabled={loading}
@@ -139,100 +139,89 @@ function ManageDrones() {
             opacity: loading ? 0.6 : 1
           }}
         >
-          Create New Mission
+          Create New Drone
         </button>
-
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <input
-            type="text"
-            placeholder="Enter Mission ID"
-            value={missionId}
-            onChange={(e) => setMissionId(e.target.value)}
-            style={{ 
-              padding: '0.75rem', 
-              border: '1px solid #ccc', 
-              borderRadius: '4px',
-              minWidth: '200px'
-            }}
-          />
-          <button 
-            onClick={handleViewMissionById}
-            disabled={loading}
-            style={{ 
-              padding: '0.75rem 1.5rem', 
-              backgroundColor: '#2196F3', 
-              color: 'white', 
-              border: 'none', 
-              borderRadius: '4px', 
-              cursor: loading ? 'not-allowed' : 'pointer',
-              opacity: loading ? 0.6 : 1
-            }}
-          >
-            View Mission by ID
-          </button>
-        </div>
       </div>
 
-      <div>
-        <h3>Missions List</h3>
-        {missions.length === 0 ? (
-          <p style={{ color: '#666' }}>No missions created yet. Click "Create New Mission" to get started.</p>
-        ) : (
-          <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
-            {missions.map((mission) => (
-              <div 
-                key={mission.id}
+      {loading && drones.length === 0 ? (
+        <p>Loading drones...</p>
+      ) : drones.length === 0 ? (
+        <p style={{ color: '#666' }}>No drones available. Click "Create New Drone" to add one.</p>
+      ) : (
+        <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
+          {drones.map((drone) => (
+            <div 
+              key={drone.droneId}
+              style={{ 
+                border: '1px solid #ddd', 
+                borderRadius: '8px', 
+                padding: '1rem',
+                backgroundColor: '#f9f9f9'
+              }}
+            >
+              <h4 style={{ margin: '0 0 0.5rem 0' }}>{drone.droneId}</h4>
+              <p style={{ margin: '0.25rem 0', fontSize: '0.9rem', color: '#666' }}>
+                <strong>Model:</strong> {drone.model}
+              </p>
+              <p style={{ margin: '0.25rem 0', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <strong>Status:</strong> 
+                <span style={{ 
+                  display: 'inline-block',
+                  padding: '0.2rem 0.5rem',
+                  borderRadius: '4px',
+                  backgroundColor: getStatusColor(drone.status),
+                  color: 'white',
+                  fontSize: '0.8rem'
+                }}>
+                  {drone.status}
+                </span>
+              </p>
+              {drone.metadata && (
+                <p style={{ margin: '0.25rem 0', fontSize: '0.9rem', color: '#666' }}>
+                  <strong>Battery:</strong> {drone.metadata.batteryLevel}%
+                </p>
+              )}
+              {drone.currentLocation && (
+                <p style={{ margin: '0.25rem 0', fontSize: '0.9rem', color: '#666' }}>
+                  <strong>Location:</strong> {drone.currentLocation.latitude.toFixed(4)}, {drone.currentLocation.longitude.toFixed(4)}
+                </p>
+              )}
+              <button
+                onClick={() => handleViewDrone(drone)}
                 style={{ 
-                  border: '1px solid #ddd', 
-                  borderRadius: '8px', 
-                  padding: '1rem',
-                  backgroundColor: '#f9f9f9'
+                  marginTop: '0.5rem',
+                  padding: '0.5rem 1rem', 
+                  backgroundColor: '#2196F3', 
+                  color: 'white', 
+                  border: 'none', 
+                  borderRadius: '4px', 
+                  cursor: 'pointer',
+                  width: '100%'
                 }}
               >
-                <h4 style={{ margin: '0 0 0.5rem 0' }}>{mission.name}</h4>
-                <p style={{ margin: '0.25rem 0', fontSize: '0.9rem', color: '#666' }}>
-                  <strong>ID:</strong> {mission.id}
-                </p>
-                <p style={{ margin: '0.25rem 0', fontSize: '0.9rem', color: '#666' }}>
-                  <strong>Status:</strong> {mission.status}
-                </p>
-                <p style={{ margin: '0.25rem 0', fontSize: '0.9rem', color: '#666' }}>
-                  <strong>Drone:</strong> {mission.droneId}
-                </p>
-                <button
-                  onClick={() => handleViewMission(mission)}
-                  style={{ 
-                    marginTop: '0.5rem',
-                    padding: '0.5rem 1rem', 
-                    backgroundColor: '#FF9800', 
-                    color: 'white', 
-                    border: 'none', 
-                    borderRadius: '4px', 
-                    cursor: 'pointer',
-                    width: '100%'
-                  }}
-                >
-                  View & Edit
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+                View & Edit
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
 
       {isCreateModalOpen && (
-        <CreateMissionModal
+        <CreateDroneModal
           onClose={() => setIsCreateModalOpen(false)}
-          onCreate={handleCreateMission}
+          onCreate={handleCreateDrone}
           loading={loading}
         />
       )}
 
-      {isModalOpen && selectedMission && (
-        <MissionModal
-          mission={selectedMission}
-          onClose={handleCloseModal}
-          onUpdate={handleUpdateMission}
+      {isViewModalOpen && selectedDrone && (
+        <DroneModal
+          drone={selectedDrone}
+          onClose={() => {
+            setIsViewModalOpen(false);
+            setSelectedDrone(null);
+          }}
+          onUpdate={handleUpdateDrone}
           loading={loading}
         />
       )}
