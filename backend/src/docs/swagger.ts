@@ -125,6 +125,16 @@ const options: OAS3Options = {
               type: "string",
               example: "mission-001"
             },
+            missionId: {
+              type: "string",
+              example: "mission-001",
+              description: "Mission identifier (mirrors the partition key)."
+            },
+            assignedDroneId: {
+              type: "string",
+              example: "drone-001",
+              description: "Drone currently assigned to execute this mission."
+            },
             missionType: {
               type: "string",
               enum: ["Patrol", "Emergency", "Recon", "Delivery", "SearchAndRescue"],
@@ -233,7 +243,8 @@ const options: OAS3Options = {
     tags: [
       { name: "Health" },
       { name: "Drones" },
-      { name: "Drone Images" }
+      { name: "Drone Images" },
+      { name: "Missions" }
     ],
     paths: {
       "/health": {
@@ -529,6 +540,168 @@ const options: OAS3Options = {
           ],
           responses: {
             "204": { description: "Deleted" }
+          }
+        }
+      },
+      "/missions": {
+        get: {
+          tags: ["Missions"],
+          summary: "List missions",
+          parameters: [
+            {
+              in: "query",
+              name: "droneId",
+              required: false,
+              schema: { type: "string" },
+              description: "Filter missions assigned to a specific drone"
+            }
+          ],
+          responses: {
+            "200": {
+              description: "List of missions",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      data: {
+                        type: "array",
+                        items: { $ref: "#/components/schemas/Mission" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        post: {
+          tags: ["Missions"],
+          summary: "Create mission",
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  required: ["missionId", "assignedDroneId"],
+                  properties: {
+                    missionId: { type: "string", example: "mission-001" },
+                    assignedDroneId: { type: "string", example: "drone-001" },
+                    missionType: {
+                      type: "string",
+                      enum: ["Patrol", "Emergency", "Recon", "Delivery", "SearchAndRescue"]
+                    },
+                    startTime: { type: "string", format: "date-time" },
+                    endTime: { type: "string", format: "date-time" },
+                    route: {
+                      type: "array",
+                      items: { $ref: "#/components/schemas/GeoPoint" }
+                    },
+                    metadata: { $ref: "#/components/schemas/DroneMetadata" }
+                  }
+                }
+              }
+            }
+          },
+          responses: {
+            "201": {
+              description: "Created mission",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      data: { $ref: "#/components/schemas/Mission" }
+                    }
+                  }
+                }
+              }
+            },
+            "409": { description: "Mission already exists" }
+          }
+        }
+      },
+      "/missions/{id}": {
+        get: {
+          tags: ["Missions"],
+          summary: "Get mission by ID",
+          parameters: [
+            { in: "path", name: "id", required: true, schema: { type: "string" } }
+          ],
+          responses: {
+            "200": {
+              description: "Mission",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      data: { $ref: "#/components/schemas/Mission" }
+                    }
+                  }
+                }
+              }
+            },
+            "404": { description: "Not found" }
+          }
+        },
+        put: {
+          tags: ["Missions"],
+          summary: "Update mission",
+          parameters: [
+            { in: "path", name: "id", required: true, schema: { type: "string" } }
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    assignedDroneId: { type: "string" },
+                    missionType: {
+                      type: "string",
+                      enum: ["Patrol", "Emergency", "Recon", "Delivery", "SearchAndRescue"]
+                    },
+                    startTime: { type: "string", format: "date-time" },
+                    endTime: { type: "string", format: "date-time" },
+                    route: {
+                      type: "array",
+                      items: { $ref: "#/components/schemas/GeoPoint" }
+                    },
+                    metadata: { $ref: "#/components/schemas/DroneMetadata" }
+                  }
+                }
+              }
+            }
+          },
+          responses: {
+            "200": {
+              description: "Updated mission",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      data: { $ref: "#/components/schemas/Mission" }
+                    }
+                  }
+                }
+              }
+            },
+            "404": { description: "Not found" }
+          }
+        },
+        delete: {
+          tags: ["Missions"],
+          summary: "Delete mission",
+          parameters: [
+            { in: "path", name: "id", required: true, schema: { type: "string" } }
+          ],
+          responses: {
+            "204": { description: "Deleted" },
+            "404": { description: "Not found" }
           }
         }
       }
