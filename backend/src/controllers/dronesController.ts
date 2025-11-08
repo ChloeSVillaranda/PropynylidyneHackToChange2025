@@ -22,6 +22,7 @@ import {
   updateDrone,
   updateDroneStatus
 } from "../services/dronesService.js";
+import { listMissionsByDrone } from "../services/missionsService.js";
 import { DroneStatus } from "../models/drone.js";
 
 export const getDrones = async (_req: Request, res: Response) => {
@@ -170,6 +171,26 @@ export const getDroneLocation = async (req: Request, res: Response) => {
       currentLocation: drone.currentLocation,
       status: drone.status,
       updatedAt: drone.lastImageTimestamp
+    }
+  });
+};
+
+export const getDroneDetail = async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  const drone = await getDroneById(id);
+
+  if (!drone) {
+    res.status(404).json({ message: `Drone ${id} not found` });
+    return;
+  }
+
+  const missions = await listMissionsByDrone(id);
+
+  res.json({
+    data: {
+      drone,
+      missions
     }
   });
 };

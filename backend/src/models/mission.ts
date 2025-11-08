@@ -8,6 +8,8 @@ export type Mission = BaseEntity & {
   startTime?: string;
   endTime?: string;
   route?: GeoPoint[];
+  assignedDroneId?: string;
   metadata?: DroneMetadata;
+  missionId?: string;
 };
 
