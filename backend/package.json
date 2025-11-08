@@ -8,7 +8,7 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/server.js",
     "lint": "eslint --ext .ts src",
-    "create:tables": "ts-node src/scripts/createTables.ts"
+    "seed:drones": "node --loader ts-node/esm src/scripts/seedDrones.ts"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.609.0",

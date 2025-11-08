@@ -1,5 +1,8 @@
+import dotenv from "dotenv";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
+
+dotenv.config();
 
 const region = process.env.AWS_REGION ?? "us-east-1";
 
@@ -20,6 +23,6 @@ export const documentClient = DynamoDBDocumentClient.from(dynamoClient, {
   }
 });
 
-export const DRONES_TABLE = process.env.DRONES_TABLE ?? "DroneFleet";
-export const DRONE_IMAGES_TABLE = process.env.DRONE_IMAGES_TABLE ?? "DroneImages";
+export const DRONES_TABLE = process.env.DRONES_TABLE ?? "drones";
+export const DRONE_IMAGES_TABLE = process.env.DRONE_IMAGES_TABLE ?? "droneImages";
 
