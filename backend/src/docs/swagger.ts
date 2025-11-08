@@ -46,11 +46,13 @@ const options: OAS3Options = {
         },
         Drone: {
           type: "object",
-          required: ["droneId", "status"],
+          required: ["entityType", "droneId", "model", "status"],
           properties: {
             entityType: {
               type: "string",
-              example: "DRONE"
+              enum: ["DRONE", "MISSION"],
+              example: "DRONE",
+              description: "Partition type used for entities stored in the drones table."
             },
             droneId: {
               type: "string",
@@ -78,11 +80,67 @@ const options: OAS3Options = {
             },
             lastMaintenance: {
               type: "string",
-              format: "date-time"
+              format: "date-time",
+              example: "2025-08-01T10:00:00.000Z"
             },
             lastImageTimestamp: {
               type: "string",
               format: "date-time"
+            },
+            metadata: {
+              $ref: "#/components/schemas/DroneMetadata"
+            },
+            startTime: {
+              type: "string",
+              format: "date-time",
+              description: "Defined only when entityType is MISSION."
+            },
+            endTime: {
+              type: "string",
+              format: "date-time",
+              description: "Defined only when entityType is MISSION."
+            },
+            route: {
+              type: "array",
+              items: { $ref: "#/components/schemas/GeoPoint" },
+              description: "Ordered list of waypoints for mission entities."
+            },
+            missionType: {
+              type: "string",
+              description: "Mission classification (MISSION entities only).",
+              example: "Patrol"
+            }
+          }
+        },
+        Mission: {
+          type: "object",
+          required: ["entityType", "droneId"],
+          properties: {
+            entityType: {
+              type: "string",
+              enum: ["MISSION"],
+              example: "MISSION"
+            },
+            droneId: {
+              type: "string",
+              example: "mission-001"
+            },
+            missionType: {
+              type: "string",
+              enum: ["Patrol", "Emergency", "Recon", "Delivery", "SearchAndRescue"],
+              example: "Patrol"
+            },
+            startTime: {
+              type: "string",
+              format: "date-time"
+            },
+            endTime: {
+              type: "string",
+              format: "date-time"
+            },
+            route: {
+              type: "array",
+              items: { $ref: "#/components/schemas/GeoPoint" }
             },
             metadata: {
               $ref: "#/components/schemas/DroneMetadata"
@@ -94,16 +152,27 @@ const options: OAS3Options = {
           required: ["droneId", "model"],
           properties: {
             droneId: { type: "string" },
-            model: { type: "string" },
+            model: { type: "string", example: "DJI-M300" },
             status: {
               type: "string",
-              enum: ["Available", "Busy", "Maintenance"]
+              enum: ["Available", "Busy", "Maintenance"],
+              example: "Available"
             },
             currentLocation: {
               $ref: "#/components/schemas/GeoPoint"
             },
             metadata: {
               $ref: "#/components/schemas/DroneMetadata"
+            }
+          },
+          example: {
+            droneId: "drone-003",
+            model: "Skydio-X10",
+            status: "Available",
+            currentLocation: { latitude: 34.05, longitude: -118.24 },
+            metadata: {
+              firmware: "v2.0.0",
+              batteryLevel: 100
             }
           }
         },

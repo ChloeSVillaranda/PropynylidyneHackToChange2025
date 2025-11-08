@@ -54,12 +54,24 @@ export const createDroneHandler = async (req: Request, res: Response) => {
   }
 
   try {
-    const { status: statusInput, ...rest } = dronePayload;
+    const { droneId, model, status: statusInput, ...rest } = dronePayload;
+
+    if (!model) {
+      res.status(400).json({ message: "model is required" });
+      return;
+    }
+
     const status = statusInput ? ensureValidStatus(statusInput) : "Available";
     const saved = await createDrone({
       entityType: "DRONE",
+      droneId,
+      model,
       status,
-      ...rest
+      currentLocation: rest.currentLocation,
+      patrolSchedule: rest.patrolSchedule,
+      lastImageTimestamp: rest.lastImageTimestamp,
+      lastMaintenance: rest.lastMaintenance,
+      metadata: rest.metadata
     });
     res.status(201).json({ data: saved });
   } catch (error) {

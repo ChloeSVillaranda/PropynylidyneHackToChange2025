@@ -53,11 +53,15 @@ export const getDroneById = async (droneId: string): Promise<Drone | null> => {
 };
 
 export const createDrone = async (drone: Drone): Promise<Drone> => {
+  const item: Drone = {
+    ...drone,
+    entityType: DRONE_ENTITY_TYPE
+  };
+
   const command = new PutCommand({
     TableName: DRONES_TABLE,
     Item: {
-      entityType: DRONE_ENTITY_TYPE,
-      ...drone
+      ...item
     },
     ConditionExpression: "attribute_not_exists(droneId) AND attribute_not_exists(entityType)"
   });
@@ -69,7 +73,7 @@ export const createDrone = async (drone: Drone): Promise<Drone> => {
 
 export const updateDrone = async (
   droneId: string,
-  updates: Partial<Omit<Drone, "droneId">>
+  updates: Partial<Omit<Drone, "droneId" | "entityType">>
 ): Promise<Drone | null> => {
   if (Object.keys(updates).length === 0) {
     throw new Error("No fields provided to update");

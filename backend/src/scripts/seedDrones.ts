@@ -18,6 +18,7 @@ const demoDrones: Drone[] = [
       windowEnd: new Date(Date.now() + 3600_000).toISOString()
     },
     lastImageTimestamp: new Date().toISOString(),
+    lastMaintenance: new Date(Date.now() - 14 * 24 * 3600_000).toISOString(),
     model: "DJI-M300",
     metadata: { batteryLevel: 87, firmware: "v1.2.0" }
   },
@@ -28,6 +29,7 @@ const demoDrones: Drone[] = [
     currentLocation: { latitude: 36.1699, longitude: -115.1398 },
     patrolSchedule: undefined,
     lastImageTimestamp: undefined,
+    lastMaintenance: new Date(Date.now() - 45 * 24 * 3600_000).toISOString(),
     model: "Skydio-X2",
     metadata: { batteryLevel: 45, firmware: "v1.1.5" }
   }
