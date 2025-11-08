@@ -46,6 +46,7 @@ function CreateDroneModal({ onClose, onCreate, loading }: CreateDroneModalProps)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('[CreateDroneModal] Submitting form data:', formData);
     onCreate(formData);
   };
 

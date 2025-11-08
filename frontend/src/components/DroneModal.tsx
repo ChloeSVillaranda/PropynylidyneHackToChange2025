@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Drone, DroneStatus } from '../types';
+import { Drone } from '../types';
 
 interface DroneModalProps {
   drone: Drone;
   onClose: () => void;
   onUpdate: (drone: Drone) => void;
   loading: boolean;
+  readOnly?: boolean;
 }
 
-function DroneModal({ drone, onClose, onUpdate, loading }: DroneModalProps) {
+function DroneModal({ drone, onClose, onUpdate, loading, readOnly = false }: DroneModalProps) {
   const [formData, setFormData] = useState<Drone>(drone);
 
   useEffect(() => {
@@ -77,7 +78,7 @@ function DroneModal({ drone, onClose, onUpdate, loading }: DroneModalProps) {
         onClick={(e) => e.stopPropagation()}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-          <h2 style={{ margin: 0 }}>Edit Drone</h2>
+          <h2 style={{ margin: 0 }}>{readOnly ? 'View Drone Details' : 'Edit Drone'}</h2>
           <button
             onClick={onClose}
             style={{
@@ -123,6 +124,7 @@ function DroneModal({ drone, onClose, onUpdate, loading }: DroneModalProps) {
               name="model"
               value={formData.model}
               onChange={handleChange}
+              disabled={readOnly}
               required
               style={{
                 width: '100%',
@@ -142,6 +144,7 @@ function DroneModal({ drone, onClose, onUpdate, loading }: DroneModalProps) {
               name="status"
               value={formData.status}
               onChange={handleChange}
+              disabled={readOnly}
               style={{
                 width: '100%',
                 padding: '0.5rem',
@@ -167,6 +170,7 @@ function DroneModal({ drone, onClose, onUpdate, loading }: DroneModalProps) {
                 placeholder="Latitude"
                 value={formData.currentLocation?.latitude || ''}
                 onChange={(e) => handleLocationChange('latitude', e.target.value)}
+                disabled={readOnly}
                 style={{
                   padding: '0.5rem',
                   border: '1px solid #ccc',
@@ -180,6 +184,7 @@ function DroneModal({ drone, onClose, onUpdate, loading }: DroneModalProps) {
                 placeholder="Longitude"
                 value={formData.currentLocation?.longitude || ''}
                 onChange={(e) => handleLocationChange('longitude', e.target.value)}
+                disabled={readOnly}
                 style={{
                   padding: '0.5rem',
                   border: '1px solid #ccc',
@@ -199,6 +204,7 @@ function DroneModal({ drone, onClose, onUpdate, loading }: DroneModalProps) {
               placeholder="e.g., v1.2.0"
               value={formData.metadata?.firmware || ''}
               onChange={(e) => handleMetadataChange('firmware', e.target.value)}
+              disabled={readOnly}
               style={{
                 width: '100%',
                 padding: '0.5rem',
@@ -219,6 +225,7 @@ function DroneModal({ drone, onClose, onUpdate, loading }: DroneModalProps) {
               max="100"
               value={formData.metadata?.batteryLevel || ''}
               onChange={(e) => handleMetadataChange('batteryLevel', e.target.value)}
+              disabled={readOnly}
               style={{
                 width: '100%',
                 padding: '0.5rem',
@@ -242,23 +249,25 @@ function DroneModal({ drone, onClose, onUpdate, loading }: DroneModalProps) {
                 cursor: 'pointer'
               }}
             >
-              Cancel
+              Close
             </button>
-            <button
-              type="submit"
-              disabled={loading}
-              style={{
-                padding: '0.75rem 1.5rem',
-                backgroundColor: '#4CAF50',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                opacity: loading ? 0.6 : 1
-              }}
-            >
-              {loading ? 'Updating...' : 'Update Drone'}
-            </button>
+            {!readOnly && (
+              <button
+                type="submit"
+                disabled={loading}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  backgroundColor: '#4CAF50',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  opacity: loading ? 0.6 : 1
+                }}
+              >
+                {loading ? 'Updating...' : 'Update Drone'}
+              </button>
+            )}
           </div>
         </form>
       </div>

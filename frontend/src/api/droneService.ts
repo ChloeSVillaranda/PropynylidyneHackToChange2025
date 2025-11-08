@@ -43,10 +43,20 @@ export const droneService = {
         entityType: 'DRONE'
       }),
     });
-    if (!response.ok) throw new Error('Failed to create drone');
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Create drone failed:', response.status, errorText);
+      throw new Error(`Failed to create drone: ${response.statusText}`);
+    }
     
-    const drone: Drone = await response.json();
-    return drone;
+    const result = await response.json();
+    
+    // Handle wrapped response {data: {}} or plain object
+    if (result && typeof result === 'object' && 'data' in result) {
+      return result.data;
+    }
+    
+    return result;
   },
 
   updateDrone: async (droneId: string, droneData: UpdateDroneRequest): Promise<Drone> => {
@@ -55,10 +65,20 @@ export const droneService = {
       headers: getAuthHeaders(),
       body: JSON.stringify(droneData),
     });
-    if (!response.ok) throw new Error('Failed to update drone');
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Update drone failed:', response.status, errorText);
+      throw new Error(`Failed to update drone: ${response.statusText}`);
+    }
     
-    const drone: Drone = await response.json();
-    return drone;
+    const result = await response.json();
+    
+    // Handle wrapped response {data: {}} or plain object
+    if (result && typeof result === 'object' && 'data' in result) {
+      return result.data;
+    }
+    
+    return result;
   },
 
   deleteDrone: async (droneId: string): Promise<void> => {
@@ -66,6 +86,10 @@ export const droneService = {
       method: 'DELETE',
       headers: getAuthHeaders(),
     });
-    if (!response.ok) throw new Error('Failed to delete drone');
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Delete drone failed:', response.status, errorText);
+      throw new Error(`Failed to delete drone: ${response.statusText}`);
+    }
   },
 };

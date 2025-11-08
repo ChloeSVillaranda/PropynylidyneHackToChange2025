@@ -50,21 +50,19 @@ function ManageDrones() {
     setLoading(true);
     setError('');
     try {
-      // Uncomment when backend is ready
-      // const newDrone = await droneService.createDrone(droneData);
-      
-      // Mock data for now
-      const newDrone: Drone = {
-        ...droneData,
-        entityType: 'DRONE',
-      };
+      console.log('Creating drone with data:', droneData);
+      const newDrone = await droneService.createDrone(droneData);
+      console.log('Drone created successfully:', newDrone);
       
       setDrones([...drones, newDrone]);
       setIsCreateModalOpen(false);
       alert('Drone created successfully!');
+      
+      // Refresh the list to get the latest from backend
+      await fetchAllDrones();
     } catch (err) {
-      setError('Failed to create drone');
-      console.error(err);
+      setError((err as Error)?.message || 'Failed to create drone');
+      console.error('Error creating drone:', err);
     } finally {
       setLoading(false);
     }
@@ -74,21 +72,53 @@ function ManageDrones() {
     setLoading(true);
     setError('');
     try {
-      // Uncomment when backend is ready
-      // await droneService.updateDrone(updatedDrone.droneId, updatedDrone);
+      // Only send fields that can be updated (exclude droneId, entityType)
+      const updateData = {
+        model: updatedDrone.model,
+        status: updatedDrone.status,
+        currentLocation: updatedDrone.currentLocation,
+        metadata: updatedDrone.metadata,
+        lastMaintenance: updatedDrone.lastMaintenance,
+        lastImageTimestamp: updatedDrone.lastImageTimestamp
+      };
       
-      // Mock update for now
-      const updatedDrones = drones.map(d => 
-        d.droneId === updatedDrone.droneId ? updatedDrone : d
-      );
+      console.log('Updating drone:', updatedDrone.droneId, updateData);
       
-      setDrones(updatedDrones);
+      const result = await droneService.updateDrone(updatedDrone.droneId, updateData);
+      console.log('Drone updated successfully:', result);
+      
+      // Refresh the list from backend
+      await fetchAllDrones();
+      
       setIsViewModalOpen(false);
       setSelectedDrone(null);
       alert('Drone updated successfully!');
     } catch (err) {
-      setError('Failed to update drone');
-      console.error(err);
+      setError((err as Error)?.message || 'Failed to update drone');
+      console.error('Error updating drone:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteDrone = async (droneId: string) => {
+    if (!confirm(`Are you sure you want to delete drone ${droneId}?`)) {
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    try {
+      console.log('Deleting drone:', droneId);
+      await droneService.deleteDrone(droneId);
+      console.log('Drone deleted successfully');
+      
+      const updatedDrones = drones.filter(d => d.droneId !== droneId);
+      setDrones(updatedDrones);
+      alert('Drone deleted successfully!');
+    } catch (err) {
+      setError((err as Error)?.message || 'Failed to delete drone');
+      console.error('Error deleting drone:', err);
     } finally {
       setLoading(false);
     }
@@ -174,21 +204,37 @@ function ManageDrones() {
                   <strong>Location:</strong> {drone.currentLocation.latitude.toFixed(4)}, {drone.currentLocation.longitude.toFixed(4)}
                 </p>
               )}
-              <button
-                onClick={() => handleViewDrone(drone)}
-                style={{ 
-                  marginTop: '0.5rem',
-                  padding: '0.5rem 1rem', 
-                  backgroundColor: '#2196F3', 
-                  color: 'white', 
-                  border: 'none', 
-                  borderRadius: '4px', 
-                  cursor: 'pointer',
-                  width: '100%'
-                }}
-              >
-                View & Edit
-              </button>
+              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                <button
+                  onClick={() => handleViewDrone(drone)}
+                  style={{ 
+                    flex: 1,
+                    padding: '0.5rem 1rem', 
+                    backgroundColor: '#2196F3', 
+                    color: 'white', 
+                    border: 'none', 
+                    borderRadius: '4px', 
+                    cursor: 'pointer'
+                  }}
+                >
+                  View & Edit
+                </button>
+                <button
+                  onClick={() => handleDeleteDrone(drone.droneId)}
+                  disabled={loading}
+                  style={{ 
+                    padding: '0.5rem 1rem', 
+                    backgroundColor: '#f44336', 
+                    color: 'white', 
+                    border: 'none', 
+                    borderRadius: '4px', 
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    opacity: loading ? 0.6 : 1
+                  }}
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           ))}
         </div>

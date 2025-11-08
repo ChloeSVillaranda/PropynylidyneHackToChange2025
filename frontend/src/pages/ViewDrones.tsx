@@ -45,30 +45,6 @@ function ViewDrones() {
     setIsViewModalOpen(true);
   };
 
-  const handleUpdateDrone = async (updatedDrone: Drone) => {
-    setLoading(true);
-    setError('');
-    try {
-      // Uncomment when backend is ready
-      // await droneService.updateDrone(updatedDrone.droneId, updatedDrone);
-      
-      // Mock update for now
-      const updatedDrones = drones.map(d => 
-        d.droneId === updatedDrone.droneId ? updatedDrone : d
-      );
-      
-      setDrones(updatedDrones);
-      setIsViewModalOpen(false);
-      setSelectedDrone(null);
-      alert('Drone updated successfully!');
-    } catch (err) {
-      setError('Failed to update drone');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Available': return '#4CAF50';
@@ -78,38 +54,9 @@ function ViewDrones() {
     }
   };
 
-  const testApiCall = async () => {
-    console.log('Testing API call to getAllDrones...');
-    console.log('API URL:', apiConfig.baseURL);
-    try {
-      const result = await droneService.getAllDrones();
-      console.log('API call SUCCESS:', result);
-      console.log('Number of drones:', result.length);
-    } catch (err) {
-      console.error('API call FAILED:', err);
-      console.error('Error details:', err instanceof Error ? err.message : err);
-    }
-  };
-
   return (
     <div style={{ padding: '2rem' }}>
       <h2>View Drones</h2>
-      
-      {/* Debug button */}
-      <button
-        onClick={testApiCall}
-        style={{
-          padding: '0.5rem 1rem',
-          backgroundColor: '#FF5722',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: 'pointer',
-          marginBottom: '1rem'
-        }}
-      >
-        🔧 Test API Call (Check Console)
-      </button>
       
       {error && (
         <div style={{ padding: '1rem', backgroundColor: '#ffebee', color: '#c62828', marginBottom: '1rem', borderRadius: '4px' }}>
@@ -173,7 +120,7 @@ function ViewDrones() {
                   width: '100%'
                 }}
               >
-                View & Edit
+                View Details
               </button>
             </div>
           ))}
@@ -187,8 +134,9 @@ function ViewDrones() {
             setIsViewModalOpen(false);
             setSelectedDrone(null);
           }}
-          onUpdate={handleUpdateDrone}
-          loading={loading}
+          onUpdate={() => {}} // No-op, read-only
+          loading={false}
+          readOnly={true}
         />
       )}
     </div>
