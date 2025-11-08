@@ -18,8 +18,8 @@ export const droneService = {
     return result.data;
   },
 
-  getDroneById: async (id: string): Promise<Drone> => {
-    const response = await fetch(`${apiConfig.baseURL}/drones/${id}`, {
+  getDroneById: async (droneId: string): Promise<Drone> => {
+    const response = await fetch(`${apiConfig.baseURL}/drones/${droneId}`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
@@ -32,15 +32,18 @@ export const droneService = {
     const response = await fetch(`${apiConfig.baseURL}/drones`, {
       method: 'POST',
       headers: getAuthHeaders(),
-      body: JSON.stringify(droneData),
+      body: JSON.stringify({
+        ...droneData,
+        entityType: 'DRONE'
+      }),
     });
     if (!response.ok) throw new Error('Failed to create drone');
     const result: DroneResponse = await response.json();
     return result.data;
   },
 
-  updateDrone: async (id: string, droneData: UpdateDroneRequest): Promise<Drone> => {
-    const response = await fetch(`${apiConfig.baseURL}/drones/${id}`, {
+  updateDrone: async (droneId: string, droneData: UpdateDroneRequest): Promise<Drone> => {
+    const response = await fetch(`${apiConfig.baseURL}/drones/${droneId}`, {
       method: 'PUT',
       headers: getAuthHeaders(),
       body: JSON.stringify(droneData),
@@ -50,8 +53,8 @@ export const droneService = {
     return result.data;
   },
 
-  deleteDrone: async (id: string): Promise<void> => {
-    const response = await fetch(`${apiConfig.baseURL}/drones/${id}`, {
+  deleteDrone: async (droneId: string): Promise<void> => {
+    const response = await fetch(`${apiConfig.baseURL}/drones/${droneId}`, {
       method: 'DELETE',
       headers: getAuthHeaders(),
     });
