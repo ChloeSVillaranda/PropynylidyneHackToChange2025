@@ -6,6 +6,7 @@ import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./docs/swagger.js";
 import dronesRouter from "./routes/dronesRoutes.js";
 import missionsRouter from "./routes/missionsRoutes.js";
+import usersRouter from "./routes/usersRoutes.js";
 
 dotenv.config();
 
@@ -21,6 +22,7 @@ app.get("/health", (_req, res) => {
 
 app.use("/drones", dronesRouter);
 app.use("/missions", missionsRouter);
+app.use("/users", usersRouter);
 
 const port = process.env.PORT ? Number(process.env.PORT) : 4000;
 

@@ -44,6 +44,65 @@ const options: OAS3Options = {
             batteryLevel: 87
           }
         },
+        User: {
+          type: "object",
+          required: ["email", "fullName", "role", "createdAt"],
+          properties: {
+            email: { type: "string", format: "email", example: "pilot@example.com" },
+            fullName: { type: "string", example: "Alex Rivera" },
+            role: { type: "string", enum: ["user", "admin"], example: "admin" },
+            createdAt: { type: "string", format: "date-time" },
+            lastLoginAt: { type: "string", format: "date-time" },
+            accessLevel: {
+              type: "array",
+              items: { type: "string" },
+              example: ["live_feed", "missions:write"]
+            },
+            metadata: {
+              type: "object",
+              additionalProperties: {
+                oneOf: [{ type: "string" }, { type: "number" }, { type: "boolean" }]
+              }
+            }
+          }
+        },
+        CreateUserRequest: {
+          type: "object",
+          required: ["email", "fullName"],
+          properties: {
+            email: { type: "string", format: "email" },
+            fullName: { type: "string" },
+            role: { type: "string", enum: ["user", "admin"], example: "user" },
+            accessLevel: {
+              type: "array",
+              items: { type: "string" }
+            },
+            metadata: {
+              type: "object",
+              additionalProperties: {
+                oneOf: [{ type: "string" }, { type: "number" }, { type: "boolean" }]
+              }
+            }
+          }
+        },
+        UpdateUserRequest: {
+          type: "object",
+          properties: {
+            fullName: { type: "string" },
+            role: { type: "string", enum: ["user", "admin"] },
+            lastLoginAt: { type: "string", format: "date-time" },
+            accessLevel: {
+              type: "array",
+              items: { type: "string" }
+            },
+            metadata: {
+              type: "object",
+              additionalProperties: {
+                oneOf: [{ type: "string" }, { type: "number" }, { type: "boolean" }]
+              }
+            }
+          }
+        },
         Drone: {
           type: "object",
           required: ["entityType", "droneId", "model", "status"],
@@ -244,7 +303,8 @@ const options: OAS3Options = {
       { name: "Health" },
       { name: "Drones" },
       { name: "Drone Images" },
-      { name: "Missions" }
+      { name: "Missions" },
+      { name: "Users" }
     ],
     paths: {
       "/health": {
@@ -737,6 +797,125 @@ const options: OAS3Options = {
           summary: "Delete mission",
           parameters: [
             { in: "path", name: "id", required: true, schema: { type: "string" } }
+          ],
+          responses: {
+            "204": { description: "Deleted" },
+            "404": { description: "Not found" }
+          }
+        }
+      },
+      "/users": {
+        get: {
+          tags: ["Users"],
+          summary: "List users",
+          responses: {
+            "200": {
+              description: "List of users",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      data: {
+                        type: "array",
+                        items: { $ref: "#/components/schemas/User" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        post: {
+          tags: ["Users"],
+          summary: "Create user",
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/CreateUserRequest" }
+              }
+            }
+          },
+          responses: {
+            "201": {
+              description: "Created user",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      data: { $ref: "#/components/schemas/User" }
+                    }
+                  }
+                }
+              }
+            },
+            "409": { description: "User already exists" }
+          }
+        }
+      },
+      "/users/{email}": {
+        get: {
+          tags: ["Users"],
+          summary: "Get user by email",
+          parameters: [
+            { in: "path", name: "email", required: true, schema: { type: "string", format: "email" } }
+          ],
+          responses: {
+            "200": {
+              description: "User",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      data: { $ref: "#/components/schemas/User" }
+                    }
+                  }
+                }
+              }
+            },
+            "404": { description: "Not found" }
+          }
+        },
+        put: {
+          tags: ["Users"],
+          summary: "Update user",
+          parameters: [
+            { in: "path", name: "email", required: true, schema: { type: "string", format: "email" } }
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/UpdateUserRequest" }
+              }
+            }
+          },
+          responses: {
+            "200": {
+              description: "Updated user",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      data: { $ref: "#/components/schemas/User" }
+                    }
+                  }
+                }
+              }
+            },
+            "404": { description: "Not found" }
+          }
+        },
+        delete: {
+          tags: ["Users"],
+          summary: "Delete user",
+          parameters: [
+            { in: "path", name: "email", required: true, schema: { type: "string", format: "email" } }
           ],
           responses: {
             "204": { description: "Deleted" },
