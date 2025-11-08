@@ -1,4 +1,4 @@
-export type DroneStatus = "active" | "idle" | "maintenance";
+export type DroneStatus = "Available" | "Busy" | "Maintenance";
 
 export type GeoPoint = {
   latitude: number;
@@ -19,6 +19,7 @@ export type Drone = {
   patrolSchedule?: PatrolSchedule;
   lastImageTimestamp?: string;
   model?: string;
+  lastMaintenance?: string;
   metadata?: Record<string, string | number | boolean>;
 };
 

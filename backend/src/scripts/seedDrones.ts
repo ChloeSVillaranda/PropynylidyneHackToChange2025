@@ -9,9 +9,9 @@ dotenv.config();
 
 const demoDrones: Drone[] = [
   {
-    entityType: "profile",
+    entityType: "DRONE",
     droneId: "drone-001",
-    status: "active",
+    status: "Available",
     currentLocation: { latitude: 34.0522, longitude: -118.2437 },
     patrolSchedule: {
       windowStart: new Date(Date.now() - 3600_000).toISOString(),
@@ -22,9 +22,9 @@ const demoDrones: Drone[] = [
     metadata: { batteryLevel: 87, firmware: "v1.2.0" }
   },
   {
-    entityType: "profile",
+    entityType: "DRONE",
     droneId: "drone-002",
-    status: "maintenance",
+    status: "Maintenance",
     currentLocation: { latitude: 36.1699, longitude: -115.1398 },
     patrolSchedule: undefined,
     lastImageTimestamp: undefined,

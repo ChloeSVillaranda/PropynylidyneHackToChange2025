@@ -10,12 +10,19 @@ import {
 import { DRONES_TABLE, documentClient } from "../config/dynamoClient.js";
 import { Drone, DroneStatus } from "../models/drone.js";
 
-const DRONE_ENTITY_TYPE = "profile";
+const DRONE_ENTITY_TYPE = "DRONE";
 
 export const listDrones = async (): Promise<Drone[]> => {
   const command = new ScanCommand({
     TableName: DRONES_TABLE,
-    ConsistentRead: false
+    ConsistentRead: false,
+    FilterExpression: "#entityType = :entityType",
+    ExpressionAttributeNames: {
+      "#entityType": "entityType"
+    },
+    ExpressionAttributeValues: {
+      ":entityType": DRONE_ENTITY_TYPE
+    }
   });
 
   const result = await documentClient.send(command);
@@ -26,9 +33,10 @@ export const listDrones = async (): Promise<Drone[]> => {
 export const getDroneById = async (droneId: string): Promise<Drone | null> => {
   const command = new QueryCommand({
     TableName: DRONES_TABLE,
-    KeyConditionExpression: "droneId = :droneId",
+    KeyConditionExpression: "droneId = :droneId AND entityType = :entityType",
     ExpressionAttributeValues: {
-      ":droneId": droneId
+      ":droneId": droneId,
+      ":entityType": DRONE_ENTITY_TYPE
     },
     Limit: 1
   });
@@ -51,7 +59,7 @@ export const createDrone = async (drone: Drone): Promise<Drone> => {
       entityType: DRONE_ENTITY_TYPE,
       ...drone
     },
-    ConditionExpression: "attribute_not_exists(droneId)"
+    ConditionExpression: "attribute_not_exists(droneId) AND attribute_not_exists(entityType)"
   });
 
   await documentClient.send(command);
@@ -85,7 +93,7 @@ export const updateDrone = async (
       droneId,
       entityType: DRONE_ENTITY_TYPE
     },
-    ConditionExpression: "attribute_exists(droneId)",
+    ConditionExpression: "attribute_exists(droneId) AND attribute_exists(entityType)",
     UpdateExpression: `SET ${setExpressions.join(", ")}`,
     ExpressionAttributeNames: expressionAttributeNames,
     ExpressionAttributeValues: expressionAttributeValues,
@@ -104,7 +112,7 @@ export const updateDroneStatus = async (droneId: string, status: DroneStatus): P
       droneId,
       entityType: DRONE_ENTITY_TYPE
     },
-    ConditionExpression: "attribute_exists(droneId)",
+    ConditionExpression: "attribute_exists(droneId) AND attribute_exists(entityType)",
     UpdateExpression: "SET #status = :status",
     ExpressionAttributeNames: {
       "#status": "status"
@@ -124,7 +132,7 @@ export const deleteDrone = async (droneId: string): Promise<void> => {
       droneId,
       entityType: DRONE_ENTITY_TYPE
     },
-    ConditionExpression: "attribute_exists(droneId)"
+    ConditionExpression: "attribute_exists(droneId) AND attribute_exists(entityType)"
   });
 
   await documentClient.send(command);

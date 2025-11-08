@@ -11,7 +11,7 @@ export const listImages = async (req: Request, res: Response) => {
     limit: limit ? Number(limit) : undefined
   });
 
-  res.json(images);
+  res.json({ data: images });
 };
 
 export const addImage = async (req: Request, res: Response) => {
@@ -23,7 +23,7 @@ export const addImage = async (req: Request, res: Response) => {
 
   await addDroneImage(imagePayload);
 
-  res.status(201).json(imagePayload);
+  res.status(201).json({ data: imagePayload });
 };
 
 export const removeImage = async (req: Request, res: Response) => {
