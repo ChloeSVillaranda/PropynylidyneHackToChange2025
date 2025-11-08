@@ -1,0 +1,25 @@
+# Environment files
+.env
+.env.local
+
+# Dependency directories
+node_modules/
+
+# Build outputs
+dist/
+coverage/
+
+# Logs and temp files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.tsbuildinfo
+
+# Local tooling caches
+.npm/
+.npm-cache/
+.turbo/
+.idea/
+.DS_Store
+
