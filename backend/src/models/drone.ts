@@ -12,6 +12,7 @@ export type PatrolSchedule = {
 };
 
 export type Drone = {
+  entityType?: string;
   droneId: string;
   status: DroneStatus;
   currentLocation?: GeoPoint;

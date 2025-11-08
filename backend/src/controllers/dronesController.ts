@@ -39,7 +39,10 @@ export const createDroneHandler = async (req: Request, res: Response) => {
   }
 
   try {
-    const saved = await createDrone(dronePayload);
+    const saved = await createDrone({
+      entityType: "profile",
+      ...dronePayload
+    });
     res.status(201).json(saved);
   } catch (error) {
     if ((error as Error).name === "ConditionalCheckFailedException") {
@@ -55,6 +58,7 @@ export const updateDroneHandler = async (req: Request, res: Response) => {
   const { id } = req.params;
   const updates = { ...req.body };
   delete updates.droneId;
+  delete updates.entityType;
 
   try {
     const updated = await updateDrone(id, updates);
