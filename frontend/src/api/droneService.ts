@@ -13,9 +13,14 @@ export const droneService = {
     });
     if (!response.ok) throw new Error('Failed to fetch drones');
     
-    // Backend returns array directly, not wrapped in {success, data}
-    const drones: Drone[] = await response.json();
-    return drones;
+    const result = await response.json();
+    
+    // Handle both wrapped {data: []} and plain array responses
+    if (result && typeof result === 'object' && 'data' in result) {
+      return Array.isArray(result.data) ? result.data : [];
+    }
+    
+    return Array.isArray(result) ? result : [];
   },
 
   getDroneById: async (droneId: string): Promise<Drone> => {

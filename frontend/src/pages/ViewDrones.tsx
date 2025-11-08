@@ -19,34 +19,22 @@ function ViewDrones() {
     setLoading(true);
     setError('');
     try {
-      // Uncomment when backend is ready
-      // const fetchedDrones = await droneService.getAllDrones();
+      const fetchedDrones = await droneService.getAllDrones();
+      console.log('Fetched drones from API:', fetchedDrones);
       
-      // Mock data for now
-      const fetchedDrones: Drone[] = [
-        {
-          droneId: 'drone-001',
-          entityType: 'DRONE',
-          model: 'DJI-M300',
-          status: 'Available',
-          currentLocation: { latitude: 34.0522, longitude: -118.2437 },
-          metadata: { firmware: 'v1.2.0', batteryLevel: 87 },
-          lastImageTimestamp: '2025-11-08T20:16:42.395Z',
-        },
-        {
-          droneId: 'drone-002',
-          entityType: 'DRONE',
-          model: 'Skydio-X2',
-          status: 'Maintenance',
-          currentLocation: { latitude: 36.1699, longitude: -115.1398 },
-          metadata: { firmware: 'v1.1.5', batteryLevel: 45 },
-        },
-      ];
+      if (!Array.isArray(fetchedDrones)) {
+        console.error('Invalid response format:', fetchedDrones);
+        setError('Invalid response format from server');
+        setDrones([]);
+        return;
+      }
       
       setDrones(fetchedDrones);
+      console.log('Drones state updated, count:', fetchedDrones.length);
     } catch (err) {
-      setError('Failed to fetch drones');
-      console.error(err);
+      setError((err as Error)?.message || 'Failed to fetch drones');
+      console.error('Error fetching drones:', err);
+      setDrones([]);
     } finally {
       setLoading(false);
     }
