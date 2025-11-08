@@ -4,18 +4,21 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "dev": "tsx watch src/server.ts",
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/server.js",
+    "start": "node --enable-source-maps dist/server.js",
     "lint": "eslint --ext .ts src",
     "seed:drones": "node --loader ts-node/esm src/scripts/seedDrones.ts"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.609.0",
     "@aws-sdk/lib-dynamodb": "^3.609.0",
+    "tsx": "^4.7.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",

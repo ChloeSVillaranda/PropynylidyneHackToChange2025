@@ -1,3 +1,17 @@
+const allowedStatuses: DroneStatus[] = ["Available", "Busy", "Maintenance"];
+
+const ensureValidStatus = (value: unknown): DroneStatus => {
+  if (!value) {
+    throw new Error("status is required");
+  }
+
+  const status = value as DroneStatus;
+  if (!allowedStatuses.includes(status)) {
+    throw new Error(`status must be one of ${allowedStatuses.join(", ")}`);
+  }
+
+  return status;
+};
 import { Request, Response } from "express";
 
 import {
@@ -8,11 +22,12 @@ import {
   updateDrone,
   updateDroneStatus
 } from "../services/dronesService.js";
+import { DroneStatus } from "../models/drone.js";
 
 export const getDrones = async (_req: Request, res: Response) => {
   try {
     const drones = await listDrones();
-    res.json(drones);
+    res.json({ data: drones });
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch drones" });
   }
@@ -27,7 +42,7 @@ export const getDrone = async (req: Request, res: Response) => {
     return;
   }
 
-  res.json(drone);
+  res.json({ data: drone });
 };
 
 export const createDroneHandler = async (req: Request, res: Response) => {
@@ -39,11 +54,26 @@ export const createDroneHandler = async (req: Request, res: Response) => {
   }
 
   try {
+    const { droneId, model, status: statusInput, ...rest } = dronePayload;
+
+    if (!model) {
+      res.status(400).json({ message: "model is required" });
+      return;
+    }
+
+    const status = statusInput ? ensureValidStatus(statusInput) : "Available";
     const saved = await createDrone({
-      entityType: "profile",
-      ...dronePayload
+      entityType: "DRONE",
+      droneId,
+      model,
+      status,
+      currentLocation: rest.currentLocation,
+      patrolSchedule: rest.patrolSchedule,
+      lastImageTimestamp: rest.lastImageTimestamp,
+      lastMaintenance: rest.lastMaintenance,
+      metadata: rest.metadata
     });
-    res.status(201).json(saved);
+    res.status(201).json({ data: saved });
   } catch (error) {
     if ((error as Error).name === "ConditionalCheckFailedException") {
       res.status(409).json({ message: `Drone ${dronePayload.droneId} already exists` });
@@ -60,6 +90,15 @@ export const updateDroneHandler = async (req: Request, res: Response) => {
   delete updates.droneId;
   delete updates.entityType;
 
+  if (updates.status) {
+    try {
+      updates.status = ensureValidStatus(updates.status);
+    } catch (error) {
+      res.status(400).json({ message: (error as Error).message });
+      return;
+    }
+  }
+
   try {
     const updated = await updateDrone(id, updates);
     if (!updated) {
@@ -67,7 +106,7 @@ export const updateDroneHandler = async (req: Request, res: Response) => {
       return;
     }
 
-    res.json(updated);
+    res.json({ data: updated });
   } catch (error) {
     if ((error as Error).message === "No fields provided to update") {
       res.status(400).json({ message: "Provide at least one field to update" });
@@ -85,15 +124,15 @@ export const setDroneStatus = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { status } = req.body;
 
-  if (!status) {
-    res.status(400).json({ message: "status is required" });
-    return;
-  }
-
   try {
-    await updateDroneStatus(id, status);
+    const normalizedStatus = ensureValidStatus(status);
+    await updateDroneStatus(id, normalizedStatus);
     res.status(204).send();
   } catch (error) {
+    if (error instanceof Error && error.message.startsWith("status must be one of")) {
+      res.status(400).json({ message: error.message });
+      return;
+    }
     if ((error as Error).name === "ConditionalCheckFailedException") {
       res.status(404).json({ message: `Drone ${id} not found` });
       return;
@@ -126,10 +165,12 @@ export const getDroneLocation = async (req: Request, res: Response) => {
   }
 
   res.json({
-    droneId: drone.droneId,
-    currentLocation: drone.currentLocation,
-    status: drone.status,
-    updatedAt: drone.lastImageTimestamp
+    data: {
+      droneId: drone.droneId,
+      currentLocation: drone.currentLocation,
+      status: drone.status,
+      updatedAt: drone.lastImageTimestamp
+    }
   });
 };
 
