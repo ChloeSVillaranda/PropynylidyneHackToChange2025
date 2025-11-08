@@ -8,7 +8,9 @@ import {
   listMissionsByDrone,
   updateMission
 } from "../services/missionsService.js";
-import { MissionType } from "../models/mission.js";
+
+// add a local MissionType so TypeScript knows the union
+type MissionType = 'Patrol' | 'Emergency' | 'Recon' | 'Delivery' | 'Survey' | 'Inspection';
 
 const allowedMissionTypes: MissionType[] = ["Patrol", "Emergency", "Recon", "Delivery"];
 
@@ -52,39 +54,61 @@ export const getMission = async (req: Request, res: Response) => {
   res.json({ data: mission });
 };
 
+// Create mission handler: more tolerant validation + logging
 export const createMissionHandler = async (req: Request, res: Response) => {
-  const missionPayload = req.body;
+  const payload = req.body;
+  const ts = new Date().toISOString();
+  console.log(`[${ts}] createMissionHandler - incoming payload:`, JSON.stringify(payload));
 
-  if (!missionPayload?.missionId) {
-    res.status(400).json({ message: "missionId is required" });
+  // Basic validation: droneId required
+  if (!payload?.droneId || typeof payload.droneId !== "string") {
+    res.status(400).json({ message: "droneId is required and must be a string" });
     return;
   }
 
-  if (!missionPayload?.assignedDroneId) {
-    res.status(400).json({ message: "assignedDroneId is required" });
-    return;
-  }
-
-  try {
-    const mission = await createMission({
-      entityType: "MISSION",
-      droneId: missionPayload.missionId,
-      missionId: missionPayload.missionId,
-      assignedDroneId: missionPayload.assignedDroneId,
-      missionType: normalizeMissionType(missionPayload.missionType),
-      startTime: missionPayload.startTime,
-      endTime: missionPayload.endTime,
-      route: missionPayload.route,
-      metadata: missionPayload.metadata
-    });
-
-    res.status(201).json({ data: mission });
-  } catch (error) {
-    if ((error as Error).name === "ConditionalCheckFailedException") {
-      res.status(409).json({ message: `Mission ${missionPayload.missionId} already exists` });
+  // Validate route if present
+  if (payload.route) {
+    if (!Array.isArray(payload.route)) {
+      res.status(400).json({ message: "route must be an array of waypoints" });
       return;
     }
+    for (let i = 0; i < payload.route.length; i++) {
+      // avoid depending on a RoutePoint type from the JS model; validate dynamically
+      const pt = payload.route[i] as any | undefined;
+      if (!pt || typeof pt.latitude !== "number" || typeof pt.longitude !== "number") {
+        res.status(400).json({ message: `route[${i}] must have numeric latitude and longitude` });
+        return;
+      }
+    }
+  }
 
+  // Normalize missionType if provided
+  const missionType = payload.missionType && typeof payload.missionType === "string"
+    ? payload.missionType
+    : undefined;
+
+  // Build mission object to persist
+  const missionToSave = {
+    droneId: payload.droneId,
+    entityType: "MISSION",
+    missionType,
+    startTime: payload.startTime,
+    endTime: payload.endTime,
+    route: payload.route,
+    // include any additional optional fields present
+    ...(payload.metadata && { metadata: payload.metadata }),
+  };
+
+  try {
+    const saved = await createMission(missionToSave as any);
+    console.log(`[${ts}] createMissionHandler - created mission for droneId=${payload.droneId}`);
+    res.status(201).json({ data: saved });
+  } catch (error) {
+    console.error(`[${ts}] createMissionHandler - error:`, error);
+    if ((error as Error).name === "ConditionalCheckFailedException") {
+      res.status(409).json({ message: `Mission for ${payload.droneId} already exists` });
+      return;
+    }
     res.status(500).json({ message: "Failed to create mission" });
   }
 };

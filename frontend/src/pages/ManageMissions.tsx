@@ -20,39 +20,22 @@ function ManageMissions() {
     setLoading(true);
     setError('');
     try {
-      // Uncomment when backend is ready
-      // const fetchedMissions = await missionService.getAllMissions();
+      const fetchedMissions = await missionService.getAllMissions();
+      console.log('Fetched missions from API:', fetchedMissions);
       
-      // Mock data for now
-      const fetchedMissions: Mission[] = [
-        {
-          droneId: 'drone-001',
-          entityType: 'MISSION',
-          missionType: 'Patrol',
-          startTime: '2025-11-08T10:00:00Z',
-          endTime: '2025-11-08T12:00:00Z',
-          route: [
-            { latitude: 34.0522, longitude: -118.2437 },
-            { latitude: 34.0622, longitude: -118.2537 },
-            { latitude: 34.0722, longitude: -118.2637 },
-          ],
-        },
-        {
-          droneId: 'drone-002',
-          entityType: 'MISSION',
-          missionType: 'Emergency',
-          startTime: '2025-11-08T14:00:00Z',
-          route: [
-            { latitude: 36.1699, longitude: -115.1398 },
-            { latitude: 36.1799, longitude: -115.1498 },
-          ],
-        },
-      ];
+      if (!Array.isArray(fetchedMissions)) {
+        console.error('Invalid response format:', fetchedMissions);
+        setError('Invalid response format from server');
+        setMissions([]);
+        return;
+      }
       
       setMissions(fetchedMissions);
+      console.log('Missions state updated, count:', fetchedMissions.length);
     } catch (err) {
-      setError('Failed to fetch missions');
-      console.error(err);
+      setError((err as Error)?.message || 'Failed to fetch missions');
+      console.error('Error fetching missions:', err);
+      setMissions([]);
     } finally {
       setLoading(false);
     }
@@ -67,21 +50,19 @@ function ManageMissions() {
     setLoading(true);
     setError('');
     try {
-      // Uncomment when backend is ready
-      // const newMission = await missionService.createMission(missionData);
-      
-      // Mock data for now
-      const newMission: Mission = {
-        ...missionData,
-        entityType: 'MISSION',
-      };
+      console.log('Creating mission with data:', missionData);
+      const newMission = await missionService.createMission(missionData);
+      console.log('Mission created successfully:', newMission);
       
       setMissions([...missions, newMission]);
       setIsCreateModalOpen(false);
       alert('Mission created successfully!');
+      
+      // Refresh the list
+      await fetchAllMissions();
     } catch (err) {
-      setError('Failed to create mission');
-      console.error(err);
+      setError((err as Error)?.message || 'Failed to create mission');
+      console.error('Error creating mission:', err);
     } finally {
       setLoading(false);
     }
@@ -91,21 +72,50 @@ function ManageMissions() {
     setLoading(true);
     setError('');
     try {
-      // Uncomment when backend is ready
-      // await missionService.updateMission(updatedMission.droneId, updatedMission);
+      const updateData = {
+        startTime: updatedMission.startTime,
+        endTime: updatedMission.endTime,
+        route: updatedMission.route,
+        missionType: updatedMission.missionType
+      };
       
-      // Mock update for now
-      const updatedMissions = missions.map(m => 
-        m.droneId === updatedMission.droneId ? updatedMission : m
-      );
+      console.log('Updating mission:', updatedMission.droneId, updateData);
       
-      setMissions(updatedMissions);
+      const result = await missionService.updateMission(updatedMission.droneId, updateData);
+      console.log('Mission updated successfully:', result);
+      
+      // Refresh the list
+      await fetchAllMissions();
+      
       setIsViewModalOpen(false);
       setSelectedMission(null);
       alert('Mission updated successfully!');
     } catch (err) {
-      setError('Failed to update mission');
-      console.error(err);
+      setError((err as Error)?.message || 'Failed to update mission');
+      console.error('Error updating mission:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteMission = async (droneId: string) => {
+    if (!confirm(`Are you sure you want to delete mission for ${droneId}?`)) {
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    try {
+      console.log('Deleting mission:', droneId);
+      await missionService.deleteMission(droneId);
+      console.log('Mission deleted successfully');
+      
+      const updatedMissions = missions.filter(m => m.droneId !== droneId);
+      setMissions(updatedMissions);
+      alert('Mission deleted successfully!');
+    } catch (err) {
+      setError((err as Error)?.message || 'Failed to delete mission');
+      console.error('Error deleting mission:', err);
     } finally {
       setLoading(false);
     }
@@ -195,21 +205,37 @@ function ManageMissions() {
                   <strong>Waypoints:</strong> {mission.route.length}
                 </p>
               )}
-              <button
-                onClick={() => handleViewMission(mission)}
-                style={{ 
-                  marginTop: '0.5rem',
-                  padding: '0.5rem 1rem', 
-                  backgroundColor: '#2196F3', 
-                  color: 'white', 
-                  border: 'none', 
-                  borderRadius: '4px', 
-                  cursor: 'pointer',
-                  width: '100%'
-                }}
-              >
-                View & Edit
-              </button>
+              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                <button
+                  onClick={() => handleViewMission(mission)}
+                  style={{ 
+                    flex: 1,
+                    padding: '0.5rem 1rem', 
+                    backgroundColor: '#2196F3', 
+                    color: 'white', 
+                    border: 'none', 
+                    borderRadius: '4px', 
+                    cursor: 'pointer'
+                  }}
+                >
+                  View & Edit
+                </button>
+                <button
+                  onClick={() => handleDeleteMission(mission.droneId)}
+                  disabled={loading}
+                  style={{ 
+                    padding: '0.5rem 1rem', 
+                    backgroundColor: '#f44336', 
+                    color: 'white', 
+                    border: 'none', 
+                    borderRadius: '4px', 
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    opacity: loading ? 0.6 : 1
+                  }}
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           ))}
         </div>
