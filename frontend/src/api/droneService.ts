@@ -2,9 +2,7 @@ import { apiConfig, getAuthHeaders } from './config';
 import { 
   Drone, 
   CreateDroneRequest, 
-  UpdateDroneRequest, 
-  DroneResponse, 
-  DronesListResponse 
+  UpdateDroneRequest
 } from '../types';
 
 export const droneService = {
@@ -14,8 +12,10 @@ export const droneService = {
       headers: getAuthHeaders(),
     });
     if (!response.ok) throw new Error('Failed to fetch drones');
-    const result: DronesListResponse = await response.json();
-    return result.data;
+    
+    // Backend returns array directly, not wrapped in {success, data}
+    const drones: Drone[] = await response.json();
+    return drones;
   },
 
   getDroneById: async (droneId: string): Promise<Drone> => {
@@ -24,8 +24,9 @@ export const droneService = {
       headers: getAuthHeaders(),
     });
     if (!response.ok) throw new Error('Failed to fetch drone');
-    const result: DroneResponse = await response.json();
-    return result.data;
+    
+    const drone: Drone = await response.json();
+    return drone;
   },
 
   createDrone: async (droneData: CreateDroneRequest): Promise<Drone> => {
@@ -38,19 +39,21 @@ export const droneService = {
       }),
     });
     if (!response.ok) throw new Error('Failed to create drone');
-    const result: DroneResponse = await response.json();
-    return result.data;
+    
+    const drone: Drone = await response.json();
+    return drone;
   },
 
   updateDrone: async (droneId: string, droneData: UpdateDroneRequest): Promise<Drone> => {
     const response = await fetch(`${apiConfig.baseURL}/drones/${droneId}`, {
-      method: 'PUT',
+      method: 'PATCH',
       headers: getAuthHeaders(),
       body: JSON.stringify(droneData),
     });
     if (!response.ok) throw new Error('Failed to update drone');
-    const result: DroneResponse = await response.json();
-    return result.data;
+    
+    const drone: Drone = await response.json();
+    return drone;
   },
 
   deleteDrone: async (droneId: string): Promise<void> => {

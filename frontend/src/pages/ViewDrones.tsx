@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { droneService } from '../api';
+import { apiConfig } from '../api/config';
 import { Drone } from '../types';
 import DroneModal from '../components/DroneModal';
 
@@ -89,9 +90,38 @@ function ViewDrones() {
     }
   };
 
+  const testApiCall = async () => {
+    console.log('Testing API call to getAllDrones...');
+    console.log('API URL:', apiConfig.baseURL);
+    try {
+      const result = await droneService.getAllDrones();
+      console.log('API call SUCCESS:', result);
+      console.log('Number of drones:', result.length);
+    } catch (err) {
+      console.error('API call FAILED:', err);
+      console.error('Error details:', err instanceof Error ? err.message : err);
+    }
+  };
+
   return (
     <div style={{ padding: '2rem' }}>
       <h2>View Drones</h2>
+      
+      {/* Debug button */}
+      <button
+        onClick={testApiCall}
+        style={{
+          padding: '0.5rem 1rem',
+          backgroundColor: '#FF5722',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer',
+          marginBottom: '1rem'
+        }}
+      >
+        🔧 Test API Call (Check Console)
+      </button>
       
       {error && (
         <div style={{ padding: '1rem', backgroundColor: '#ffebee', color: '#c62828', marginBottom: '1rem', borderRadius: '4px' }}>
