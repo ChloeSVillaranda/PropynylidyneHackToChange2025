@@ -16,12 +16,10 @@ export type PatrolSchedule = {
 export type DroneMetadata = Record<string, string | number | boolean | null | undefined>;
 
 export type BaseEntity = {
-  entityType: EntityType;
   droneId: string;
 };
 
 export type Drone = BaseEntity & {
-  entityType: "DRONE";
   model: string;
   status: DroneStatus;
   currentLocation?: GeoPoint;

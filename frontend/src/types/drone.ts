@@ -1,6 +1,5 @@
 export interface Drone {
   droneId: string;
-  entityType: 'DRONE';
   model: string;
   status: DroneStatus;
   currentLocation?: {

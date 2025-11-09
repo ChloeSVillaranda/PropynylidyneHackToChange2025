@@ -64,7 +64,6 @@ export const createDroneHandler = async (req: Request, res: Response) => {
 
     const status = statusInput ? ensureValidStatus(statusInput) : "Available";
     const saved = await createDrone({
-      entityType: "DRONE",
       droneId,
       model,
       status,

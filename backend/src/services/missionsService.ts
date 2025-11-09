@@ -1,3 +1,4 @@
+import { DRONES_TABLE, documentClient } from "../config/dynamoClient.js";
 import {
   DeleteCommand,
   GetCommand,
@@ -7,49 +8,40 @@ import {
   UpdateCommand
 } from "@aws-sdk/lib-dynamodb";
 
-import { DRONES_TABLE, documentClient } from "../config/dynamoClient.js";
 import { Mission } from "../models/mission.js";
 
 const MISSION_ENTITY_TYPE = "MISSION";
 
 const missionKey = (missionId: string) => ({
-  droneId: missionId,
-  entityType: MISSION_ENTITY_TYPE
+  missionId
 });
 
 export const listMissions = async (): Promise<Mission[]> => {
   const command = new ScanCommand({
-    TableName: DRONES_TABLE,
-    FilterExpression: "#entityType = :entityType",
-    ExpressionAttributeNames: {
-      "#entityType": "entityType"
-    },
-    ExpressionAttributeValues: {
-      ":entityType": MISSION_ENTITY_TYPE
-    }
+    TableName: DRONES_TABLE
   });
 
   const result = await documentClient.send(command);
 
-  return (result.Items as Mission[]) ?? [];
+  // Filter missions in memory (items that have missionId)
+  return ((result.Items as any[]) ?? []).filter(item => item.missionId);
 };
 
 export const listMissionsByDrone = async (droneId: string): Promise<Mission[]> => {
   const command = new ScanCommand({
     TableName: DRONES_TABLE,
-    FilterExpression: "#entityType = :entityType AND assignedDroneId = :assignedDroneId",
+    FilterExpression: "#droneId = :droneId",
     ExpressionAttributeNames: {
-      "#entityType": "entityType"
+      "#droneId": "droneId"
     },
     ExpressionAttributeValues: {
-      ":entityType": MISSION_ENTITY_TYPE,
-      ":assignedDroneId": droneId
+      ":droneId": droneId
     }
   });
 
   const result = await documentClient.send(command);
-
-  return (result.Items as Mission[]) ?? [];
+  // Filter missions in memory
+  return ((result.Items as any[]) ?? []).filter(item => item.missionId);
 };
 
 export const getMissionById = async (missionId: string): Promise<Mission | null> => {
@@ -59,30 +51,28 @@ export const getMissionById = async (missionId: string): Promise<Mission | null>
   });
 
   const result = await documentClient.send(command);
-
   return (result.Item as Mission) ?? null;
 };
 
 export const createMission = async (mission: Mission): Promise<Mission> => {
-  const item: Mission = {
+  const item = {
     ...mission,
-    entityType: MISSION_ENTITY_TYPE
+    missionId: mission.missionId!
   };
 
   const command = new PutCommand({
     TableName: DRONES_TABLE,
     Item: item,
-    ConditionExpression: "attribute_not_exists(droneId) AND attribute_not_exists(entityType)"
+    ConditionExpression: "attribute_not_exists(missionId)"
   });
 
   await documentClient.send(command);
-
-  return item;
+  return mission;
 };
 
 export const updateMission = async (
   missionId: string,
-  updates: Partial<Omit<Mission, "droneId" | "entityType">>
+  updates: Partial<Omit<Mission, "missionId" | "entityType" | "droneId">>
 ): Promise<Mission | null> => {
   if (Object.keys(updates).length === 0) {
     throw new Error("No fields provided to update");
@@ -103,7 +93,7 @@ export const updateMission = async (
   const command = new UpdateCommand({
     TableName: DRONES_TABLE,
     Key: missionKey(missionId),
-    ConditionExpression: "attribute_exists(droneId) AND attribute_exists(entityType)",
+    ConditionExpression: "attribute_exists(missionId)",
     UpdateExpression: `SET ${setExpressions.join(", ")}`,
     ExpressionAttributeNames: expressionAttributeNames,
     ExpressionAttributeValues: expressionAttributeValues,
@@ -111,7 +101,6 @@ export const updateMission = async (
   });
 
   const result = await documentClient.send(command);
-
   return (result.Attributes as Mission) ?? null;
 };
 
@@ -119,7 +108,7 @@ export const deleteMission = async (missionId: string): Promise<void> => {
   const command = new DeleteCommand({
     TableName: DRONES_TABLE,
     Key: missionKey(missionId),
-    ConditionExpression: "attribute_exists(droneId) AND attribute_exists(entityType)"
+    ConditionExpression: "attribute_exists(missionId)"
   });
 
   await documentClient.send(command);

@@ -38,10 +38,7 @@ export const droneService = {
     const response = await fetch(`${apiConfig.baseURL}/drones`, {
       method: 'POST',
       headers: getAuthHeaders(),
-      body: JSON.stringify({
-        ...droneData,
-        entityType: 'DRONE'
-      }),
+      body: JSON.stringify(droneData),
     });
     if (!response.ok) {
       const errorText = await response.text();

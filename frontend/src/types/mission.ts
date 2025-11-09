@@ -1,6 +1,7 @@
 export interface Mission {
-  droneId: string;
+  droneId: string; // The actual drone ID
   entityType: 'MISSION';
+  missionId?: string; // add missionId as optional attribute
   startTime?: string;
   endTime?: string;
   route?: RoutePoint[];
@@ -18,10 +19,12 @@ export type MissionStatus = 'pending' | 'active' | 'completed' | 'cancelled' | '
 
 export interface CreateMissionRequest {
   droneId: string;
+  missionId?: string;
   startTime?: string;
   endTime?: string;
   route?: RoutePoint[];
   missionType?: MissionType;
+  metadata?: Record<string, unknown>;
 }
 
 export interface UpdateMissionRequest {
