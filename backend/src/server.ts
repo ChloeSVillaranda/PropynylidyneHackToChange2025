@@ -1,6 +1,7 @@
 import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
+import type { NextFunction, Request, Response } from "express";
 import swaggerUi from "swagger-ui-express";
 
 import { swaggerSpec } from "./docs/swagger.js";
@@ -18,7 +19,7 @@ app.use(cors());
 app.use(express.json());
 
 // --- Add request logging middleware ---
-app.use((req, res, next) => {
+app.use((req: Request, res: Response, next: NextFunction) => {
   const ts = new Date().toISOString();
   console.log(`[${ts}] Incoming request: ${req.method} ${req.originalUrl}`);
   if (req.query && Object.keys(req.query).length) {
@@ -44,7 +45,7 @@ app.use((req, res, next) => {
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, { explorer: true }));
 
-app.get("/health", (_req, res) => {
+app.get("/health", (_req: Request, res: Response) => {
   res.json({ status: "ok", service: "backend", timestamp: new Date().toISOString() });
 });
 
