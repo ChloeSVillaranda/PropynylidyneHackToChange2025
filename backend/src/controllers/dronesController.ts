@@ -105,23 +105,25 @@ export const createDroneHandler = async (req: Request, res: Response) => {
 
 export const updateDroneHandler = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { droneId } = req.params;
+    const { id } = req.params;
     const updates = req.body;
 
-    console.log(`[updateDrone] Attempting to update drone: ${droneId}`);
+    console.log(`[updateDrone] Attempting to update drone: ${id}`);
     console.log(`[updateDrone] Update data:`, JSON.stringify(updates));
 
     // Check if drone exists first
-    const existingDrone = await getDroneById(droneId);
+    const existingDrone = await getDroneById(id);
+    console.log(`[updateDrone] Existing drone lookup result:`, existingDrone ? 'FOUND' : 'NOT FOUND');
+    
     if (!existingDrone) {
-      console.log(`[updateDrone] Drone not found: ${droneId}`);
+      console.log(`[updateDrone] Drone not found: ${id}`);
       res.status(404).json({ error: "Drone not found" });
       return;
     }
 
     console.log(`[updateDrone] Found existing drone:`, JSON.stringify(existingDrone));
 
-    const updatedDrone = await updateDrone(droneId, updates);
+    const updatedDrone = await updateDrone(id, updates);
     
     console.log(`[updateDrone] Successfully updated drone:`, JSON.stringify(updatedDrone));
     

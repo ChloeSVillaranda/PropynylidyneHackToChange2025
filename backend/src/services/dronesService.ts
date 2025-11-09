@@ -10,7 +10,6 @@ import { DRONES_TABLE, documentClient } from "../config/dynamoClient.js";
 import { Drone, DroneStatus } from "../models/drone.js";
 
 export const listDrones = async (): Promise<Drone[]> => {
-  console.log('[listDrones] Starting scan...');
   
   const command = new ScanCommand({
     TableName: DRONES_TABLE,
@@ -18,23 +17,8 @@ export const listDrones = async (): Promise<Drone[]> => {
   });
 
   const result = await documentClient.send(command);
-  
-  console.log('[listDrones] Raw DynamoDB response count:', result.Items?.length || 0);
-  console.log('[listDrones] Raw items:', JSON.stringify(result.Items, null, 2));
 
   const allItems = (result.Items as any[]) ?? [];
-  console.log('[listDrones] Total items:', allItems.length);
-
-  // Show what each item looks like
-  allItems.forEach((item, idx) => {
-    console.log(`[listDrones] Item ${idx}:`, {
-      droneId: item.droneId,
-      model: item.model,
-      missionId: item.missionId,
-      hasModel: !!item.model,
-      hasMissionId: !!item.missionId
-    });
-  });
 
   // Filter drones: has model field AND does NOT have missionId
   const filtered = allItems.filter(item => {
@@ -52,23 +36,15 @@ export const listDrones = async (): Promise<Drone[]> => {
 };
 
 export const getDroneById = async (droneId: string): Promise<Drone | null> => {
-  console.log('[getDroneById] Fetching drone:', droneId);
-  
   const command = new GetCommand({
     TableName: DRONES_TABLE,
     Key: {
-      droneId  // Only partition key, no sort key
+      droneId
     }
   });
 
-  try {
-    const result = await documentClient.send(command);
-    console.log('[getDroneById] Result:', result.Item);
-    return (result.Item as Drone) ?? null;
-  } catch (error) {
-    console.error('[getDroneById] Error:', error);
-    throw error;
-  }
+  const result = await documentClient.send(command);
+  return (result.Item as Drone) ?? null;
 };
 
 export const createDrone = async (drone: Drone): Promise<Drone> => {
