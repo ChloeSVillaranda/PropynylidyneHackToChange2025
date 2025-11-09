@@ -9,23 +9,10 @@ import {
   updateMission
 } from "../services/missionsService.js";
 
-// add a local MissionType so TypeScript knows the union
-type MissionType = 'Patrol' | 'Emergency' | 'Recon' | 'Delivery' | 'Survey' | 'Inspection';
+const allowedMissionTypes = ["Patrol", "Emergency", "Data Collection"] as const;
 
-const allowedMissionTypes: MissionType[] = ["Patrol", "Emergency", "Recon", "Delivery"];
-
-const normalizeMissionType = (missionType?: unknown): MissionType | undefined => {
-  if (!missionType) {
-    return undefined;
-  }
-
-  const type = missionType as MissionType;
-
-  if (allowedMissionTypes.includes(type)) {
-    return type;
-  }
-
-  return type;
+const isValidMissionType = (value: unknown): value is (typeof allowedMissionTypes)[number] => {
+  return typeof value === "string" && allowedMissionTypes.includes(value as any);
 };
 
 export const getMissions = async (req: Request, res: Response) => {
@@ -44,7 +31,14 @@ export const getMissions = async (req: Request, res: Response) => {
 
 export const getMission = async (req: Request, res: Response) => {
   const { id } = req.params;
-  const mission = await getMissionById(id);
+  const missionId = Number(id);
+
+  if (Number.isNaN(missionId)) {
+    res.status(400).json({ message: "missionId must be a number" });
+    return;
+  }
+
+  const mission = await getMissionById(missionId);
 
   if (!mission) {
     res.status(404).json({ message: `Mission ${id} not found` });
@@ -66,6 +60,21 @@ export const createMissionHandler = async (req: Request, res: Response) => {
     return;
   }
 
+  if (payload.missionType && !isValidMissionType(payload.missionType)) {
+    res.status(400).json({ message: `missionType must be one of: ${allowedMissionTypes.join(", ")}` });
+    return;
+  }
+
+  let missionId: number | undefined;
+  if (payload.missionId !== undefined) {
+    const parsedId = Number(payload.missionId);
+    if (Number.isNaN(parsedId)) {
+      res.status(400).json({ message: "missionId must be numeric when provided" });
+      return;
+    }
+    missionId = parsedId;
+  }
+
   // Validate route if present
   if (payload.route) {
     if (!Array.isArray(payload.route)) {
@@ -82,25 +91,18 @@ export const createMissionHandler = async (req: Request, res: Response) => {
     }
   }
 
-  // Normalize missionType if provided
-  const missionType = payload.missionType && typeof payload.missionType === "string"
-    ? payload.missionType
-    : undefined;
-
   // Build mission object to persist
   const missionToSave = {
+    missionId,
     droneId: payload.droneId,
-    entityType: "MISSION",
-    missionType,
+    missionType: payload.missionType,
     startTime: payload.startTime,
     endTime: payload.endTime,
-    route: payload.route,
-    // include any additional optional fields present
-    ...(payload.metadata && { metadata: payload.metadata }),
+    route: payload.route
   };
 
   try {
-    const saved = await createMission(missionToSave as any);
+    const saved = await createMission(missionToSave);
     console.log(`[${ts}] createMissionHandler - created mission for droneId=${payload.droneId}`);
     res.status(201).json({ data: saved });
   } catch (error) {
@@ -115,57 +117,51 @@ export const createMissionHandler = async (req: Request, res: Response) => {
 
 export const updateMissionHandler = async (req: Request, res: Response) => {
   const { id } = req.params;
+  const missionId = Number(id);
+
+  if (Number.isNaN(missionId)) {
+    res.status(400).json({ message: "missionId must be a number" });
+    return;
+  }
+
   const updates = { ...req.body };
 
   // protect immutable key fields
-  delete updates.entityType;
   delete updates.missionId;
-  delete updates.droneId;
 
-  if (updates.missionType) {
-    updates.missionType = normalizeMissionType(updates.missionType);
+  if (Object.prototype.hasOwnProperty.call(updates, "missionType") && updates.missionType !== undefined) {
+    if (!isValidMissionType(updates.missionType)) {
+      res.status(400).json({ message: `missionType must be one of: ${allowedMissionTypes.join(", ")}` });
+      return;
+    }
+  }
+
+  if (updates.route) {
+    if (!Array.isArray(updates.route)) {
+      res.status(400).json({ message: "route must be an array of waypoints" });
+      return;
+    }
+    for (let i = 0; i < updates.route.length; i++) {
+      const pt = updates.route[i] as any | undefined;
+      if (!pt || typeof pt.latitude !== "number" || typeof pt.longitude !== "number") {
+        res.status(400).json({ message: `route[${i}] must have numeric latitude and longitude` });
+        return;
+      }
+    }
   }
 
   const ts = new Date().toISOString();
   try {
-    console.log(`[${ts}] updateMissionHandler - requested id=${id}, updates=${JSON.stringify(updates)}`);
+    console.log(`[${ts}] updateMissionHandler - requested id=${missionId}, updates=${JSON.stringify(updates)}`);
 
-    // Try direct lookup by the provided id
-    let stored = await getMissionById(id);
-    let keyToUse = id;
-
-    if (!stored) {
-      console.log(`[${ts}] updateMissionHandler - direct lookup failed for id=${id}, scanning missions for a match`);
-      const all = await listMissions();
-
-      const found = all.find((m: any) =>
-        m?.droneId === id || m?.missionId === id || m?.assignedDroneId === id
-      );
-
-      if (!found) {
-        console.log(`[${ts}] updateMissionHandler - no mission found matching id=${id}`);
-        res.status(404).json({ message: `Mission ${id} not found` });
-        return;
-      }
-
-      // Determine actual stored key (prefer droneId if present)
-      keyToUse = found.droneId ?? found.missionId ?? found.assignedDroneId;
-      stored = found;
-      console.log(`[${ts}] updateMissionHandler - matched stored mission key: ${keyToUse}`);
-    } else {
-      console.log(`[${ts}] updateMissionHandler - direct lookup succeeded for id=${id}`);
-    }
-
-    // Proceed to update using the discovered key
-    const updated = await updateMission(keyToUse, updates);
+    const updated = await updateMission(missionId, updates);
 
     if (!updated) {
-      console.log(`[${ts}] updateMissionHandler - update returned null for key=${keyToUse}`);
       res.status(404).json({ message: `Mission ${id} not found` });
       return;
     }
 
-    console.log(`[${ts}] updateMissionHandler - successfully updated mission key=${keyToUse}`);
+    console.log(`[${ts}] updateMissionHandler - successfully updated mission id=${missionId}`);
     res.json({ data: updated });
   } catch (error) {
     // Print full error and stack for debugging
@@ -191,9 +187,15 @@ export const updateMissionHandler = async (req: Request, res: Response) => {
 
 export const removeMission = async (req: Request, res: Response) => {
   const { id } = req.params;
+  const missionId = Number(id);
+
+  if (Number.isNaN(missionId)) {
+    res.status(400).json({ message: "missionId must be a number" });
+    return;
+  }
 
   try {
-    await deleteMission(id);
+    await deleteMission(missionId);
     res.status(204).send();
   } catch (error) {
     if ((error as Error).name === "ConditionalCheckFailedException") {

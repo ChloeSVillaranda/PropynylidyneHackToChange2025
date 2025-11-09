@@ -2,31 +2,31 @@ import {
   DeleteCommand,
   GetCommand,
   PutCommand,
-  QueryCommand,
   ScanCommand,
   UpdateCommand
 } from "@aws-sdk/lib-dynamodb";
 
-import { DRONES_TABLE, documentClient } from "../config/dynamoClient.js";
-import { Mission } from "../models/mission.js";
+import { MISSIONS_TABLE, documentClient } from "../config/dynamoClient.js";
+import { Mission, MissionType, RoutePoint } from "../models/mission.js";
 
-const MISSION_ENTITY_TYPE = "MISSION";
+type CreateMissionInput = {
+  missionId?: number;
+  droneId: string;
+  missionType?: MissionType;
+  startTime?: string;
+  endTime?: string;
+  route?: RoutePoint[];
+};
 
-const missionKey = (missionId: string) => ({
-  droneId: missionId,
-  entityType: MISSION_ENTITY_TYPE
+type UpdateMissionInput = Partial<Omit<CreateMissionInput, "missionId">>;
+
+const buildKey = (missionId: number) => ({
+  missionId
 });
 
 export const listMissions = async (): Promise<Mission[]> => {
   const command = new ScanCommand({
-    TableName: DRONES_TABLE,
-    FilterExpression: "#entityType = :entityType",
-    ExpressionAttributeNames: {
-      "#entityType": "entityType"
-    },
-    ExpressionAttributeValues: {
-      ":entityType": MISSION_ENTITY_TYPE
-    }
+    TableName: MISSIONS_TABLE
   });
 
   const result = await documentClient.send(command);
@@ -36,14 +36,10 @@ export const listMissions = async (): Promise<Mission[]> => {
 
 export const listMissionsByDrone = async (droneId: string): Promise<Mission[]> => {
   const command = new ScanCommand({
-    TableName: DRONES_TABLE,
-    FilterExpression: "#entityType = :entityType AND assignedDroneId = :assignedDroneId",
-    ExpressionAttributeNames: {
-      "#entityType": "entityType"
-    },
+    TableName: MISSIONS_TABLE,
+    FilterExpression: "droneId = :droneId",
     ExpressionAttributeValues: {
-      ":entityType": MISSION_ENTITY_TYPE,
-      ":assignedDroneId": droneId
+      ":droneId": droneId
     }
   });
 
@@ -52,10 +48,10 @@ export const listMissionsByDrone = async (droneId: string): Promise<Mission[]> =
   return (result.Items as Mission[]) ?? [];
 };
 
-export const getMissionById = async (missionId: string): Promise<Mission | null> => {
+export const getMissionById = async (missionId: number): Promise<Mission | null> => {
   const command = new GetCommand({
-    TableName: DRONES_TABLE,
-    Key: missionKey(missionId)
+    TableName: MISSIONS_TABLE,
+    Key: buildKey(missionId)
   });
 
   const result = await documentClient.send(command);
@@ -63,28 +59,35 @@ export const getMissionById = async (missionId: string): Promise<Mission | null>
   return (result.Item as Mission) ?? null;
 };
 
-export const createMission = async (mission: Mission): Promise<Mission> => {
-  const item: Mission = {
-    ...mission,
-    entityType: MISSION_ENTITY_TYPE
+export const createMission = async (input: CreateMissionInput): Promise<Mission> => {
+  const mission: Mission = {
+    missionId: input.missionId ?? Date.now(),
+    droneId: input.droneId,
+    missionType: input.missionType,
+    startTime: input.startTime,
+    endTime: input.endTime,
+    route: input.route
   };
 
   const command = new PutCommand({
-    TableName: DRONES_TABLE,
-    Item: item,
-    ConditionExpression: "attribute_not_exists(droneId) AND attribute_not_exists(entityType)"
+    TableName: MISSIONS_TABLE,
+    Item: mission,
+    ConditionExpression: "attribute_not_exists(missionId)"
   });
 
   await documentClient.send(command);
 
-  return item;
+  return mission;
 };
 
 export const updateMission = async (
-  missionId: string,
-  updates: Partial<Omit<Mission, "droneId" | "entityType">>
+  missionId: number,
+  updates: UpdateMissionInput
 ): Promise<Mission | null> => {
-  if (Object.keys(updates).length === 0) {
+  const sanitizedUpdates: Record<string, unknown> = { ...updates };
+  delete sanitizedUpdates.missionId;
+
+  if (Object.keys(sanitizedUpdates).length === 0) {
     throw new Error("No fields provided to update");
   }
 
@@ -92,7 +95,7 @@ export const updateMission = async (
   const expressionAttributeValues: Record<string, unknown> = {};
   const setExpressions: string[] = [];
 
-  Object.entries(updates).forEach(([key, value]) => {
+  Object.entries(sanitizedUpdates).forEach(([key, value]) => {
     const attributeName = `#${key}`;
     const attributeValue = `:${key}`;
     expressionAttributeNames[attributeName] = key;
@@ -101,9 +104,9 @@ export const updateMission = async (
   });
 
   const command = new UpdateCommand({
-    TableName: DRONES_TABLE,
-    Key: missionKey(missionId),
-    ConditionExpression: "attribute_exists(droneId) AND attribute_exists(entityType)",
+    TableName: MISSIONS_TABLE,
+    Key: buildKey(missionId),
+    ConditionExpression: "attribute_exists(missionId)",
     UpdateExpression: `SET ${setExpressions.join(", ")}`,
     ExpressionAttributeNames: expressionAttributeNames,
     ExpressionAttributeValues: expressionAttributeValues,
@@ -115,11 +118,11 @@ export const updateMission = async (
   return (result.Attributes as Mission) ?? null;
 };
 
-export const deleteMission = async (missionId: string): Promise<void> => {
+export const deleteMission = async (missionId: number): Promise<void> => {
   const command = new DeleteCommand({
-    TableName: DRONES_TABLE,
-    Key: missionKey(missionId),
-    ConditionExpression: "attribute_exists(droneId) AND attribute_exists(entityType)"
+    TableName: MISSIONS_TABLE,
+    Key: buildKey(missionId),
+    ConditionExpression: "attribute_exists(missionId)"
   });
 
   await documentClient.send(command);

@@ -114,46 +114,37 @@ const options: OAS3Options = {
         },
         Mission: {
           type: "object",
-          required: ["entityType", "droneId"],
+          required: ["missionId", "droneId"],
           properties: {
-            entityType: {
-              type: "string",
-              enum: ["MISSION"],
-              example: "MISSION"
+            missionId: {
+              type: "integer",
+              example: 123,
+              description: "Numeric identifier for the mission."
             },
             droneId: {
               type: "string",
-              example: "mission-001"
-            },
-            missionId: {
-              type: "string",
-              example: "mission-001",
-              description: "Mission identifier (mirrors the partition key)."
-            },
-            assignedDroneId: {
-              type: "string",
-              example: "drone-001",
-              description: "Drone currently assigned to execute this mission."
+              example: "drone-42",
+              description: "Drone assigned to execute this mission."
             },
             missionType: {
               type: "string",
-              enum: ["Patrol", "Emergency", "Recon", "Delivery", "SearchAndRescue"],
+              enum: ["Patrol", "Emergency", "Data Collection"],
               example: "Patrol"
             },
             startTime: {
               type: "string",
-              format: "date-time"
+              format: "date-time",
+              example: "2025-03-15T18:30:00Z"
             },
             endTime: {
               type: "string",
-              format: "date-time"
+              format: "date-time",
+              example: "2025-03-15T19:45:00Z"
             },
             route: {
               type: "array",
+              description: "Ordered list of waypoints for the mission flight path.",
               items: { $ref: "#/components/schemas/GeoPoint" }
-            },
-            metadata: {
-              $ref: "#/components/schemas/DroneMetadata"
             }
           }
         },
@@ -623,13 +614,17 @@ const options: OAS3Options = {
               "application/json": {
                 schema: {
                   type: "object",
-                  required: ["missionId", "assignedDroneId"],
+                  required: ["droneId"],
                   properties: {
-                    missionId: { type: "string", example: "mission-001" },
-                    assignedDroneId: { type: "string", example: "drone-001" },
+                    missionId: {
+                      type: "integer",
+                      example: 123,
+                      description: "Optional numeric mission identifier. If omitted, one is generated."
+                    },
+                    droneId: { type: "string", example: "drone-001" },
                     missionType: {
                       type: "string",
-                      enum: ["Patrol", "Emergency", "Recon", "Delivery", "SearchAndRescue"]
+                      enum: ["Patrol", "Emergency", "Data Collection"]
                     },
                     startTime: { type: "string", format: "date-time" },
                     endTime: { type: "string", format: "date-time" },
@@ -666,7 +661,7 @@ const options: OAS3Options = {
           tags: ["Missions"],
           summary: "Get mission by ID",
           parameters: [
-            { in: "path", name: "id", required: true, schema: { type: "string" } }
+            { in: "path", name: "id", required: true, schema: { type: "integer" } }
           ],
           responses: {
             "200": {
@@ -689,7 +684,7 @@ const options: OAS3Options = {
           tags: ["Missions"],
           summary: "Update mission",
           parameters: [
-            { in: "path", name: "id", required: true, schema: { type: "string" } }
+            { in: "path", name: "id", required: true, schema: { type: "integer" } }
           ],
           requestBody: {
             required: true,
@@ -698,18 +693,17 @@ const options: OAS3Options = {
                 schema: {
                   type: "object",
                   properties: {
-                    assignedDroneId: { type: "string" },
+                    droneId: { type: "string" },
                     missionType: {
                       type: "string",
-                      enum: ["Patrol", "Emergency", "Recon", "Delivery", "SearchAndRescue"]
+                      enum: ["Patrol", "Emergency", "Data Collection"]
                     },
                     startTime: { type: "string", format: "date-time" },
                     endTime: { type: "string", format: "date-time" },
                     route: {
                       type: "array",
                       items: { $ref: "#/components/schemas/GeoPoint" }
-                    },
-                    metadata: { $ref: "#/components/schemas/DroneMetadata" }
+                    }
                   }
                 }
               }
@@ -736,7 +730,7 @@ const options: OAS3Options = {
           tags: ["Missions"],
           summary: "Delete mission",
           parameters: [
-            { in: "path", name: "id", required: true, schema: { type: "string" } }
+            { in: "path", name: "id", required: true, schema: { type: "integer" } }
           ],
           responses: {
             "204": { description: "Deleted" },

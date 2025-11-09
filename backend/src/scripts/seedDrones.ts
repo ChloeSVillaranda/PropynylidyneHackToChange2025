@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import { PutCommand } from "@aws-sdk/lib-dynamodb";
 
-import { DRONES_TABLE, documentClient } from "../config/dynamoClient.js";
+import { DRONES_TABLE, MISSIONS_TABLE, documentClient } from "../config/dynamoClient.js";
 import { Drone } from "../models/drone.js";
 import { Mission } from "../models/mission.js";
 import { logger } from "../utils/logger.js";
@@ -38,20 +38,15 @@ const demoDrones: Drone[] = [
 
 const demoMissions: Mission[] = [
   {
-    entityType: "MISSION",
-    droneId: "mission-001",
-    missionId: "mission-001",
-    assignedDroneId: "drone-001",
+    missionId: 1,
+    droneId: "drone-001",
     missionType: "Patrol",
     startTime: new Date(Date.now() + 3600_000).toISOString(),
     endTime: new Date(Date.now() + 3 * 3600_000).toISOString(),
     route: [
       { latitude: 34.05, longitude: -118.24 },
       { latitude: 34.07, longitude: -118.26 }
-    ],
-    metadata: {
-      priority: "high"
-    }
+    ]
   }
 ];
 
@@ -70,11 +65,11 @@ const seed = async () => {
 
   logger.info("Seeding complete.");
 
-  logger.info(`Seeding ${demoMissions.length} missions into table ${DRONES_TABLE}`);
+  logger.info(`Seeding ${demoMissions.length} missions into table ${MISSIONS_TABLE}`);
 
   for (const mission of demoMissions) {
     const command = new PutCommand({
-      TableName: DRONES_TABLE,
+      TableName: MISSIONS_TABLE,
       Item: mission
     });
 
