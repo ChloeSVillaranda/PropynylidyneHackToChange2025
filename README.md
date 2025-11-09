@@ -1,12 +1,24 @@
 # PropynylidyneHackToChange2025
 Hack to change 2025 project
 
+## Running the Project
+You can run the frontend and backend together with the following command:
+`docker compose up --build`
+
+*Note: `docker` must be running first.
+
+Then, open these links:
+- Web app: http://localhost:3000/
+- API docs: http://localhost:4000/api-docs
+
+
 ## Frontend
 
 ### How to run
 1. `cd frontend`
 2. `npm install`
 3. `npm start`
+4. Open http://localhost:3000/
 
 ## Backend
 The backend is written in Typescript and uses Node.js to create APIs.
@@ -15,7 +27,7 @@ The backend is written in Typescript and uses Node.js to create APIs.
 1. `cd backend`
 2. `npm install`
 3. `npm start`
-4. Open localhost:4000/api-docs
+4. Open [localhost:4000/api-docs](http://localhost:4000/api-docs)
 
 ### Mission scheduling safeguards
 - API now validates drone existence and maintenance status before assigning missions and blocks overlapping schedules for the same drone.
