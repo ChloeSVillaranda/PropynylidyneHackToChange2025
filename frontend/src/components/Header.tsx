@@ -14,17 +14,26 @@ import Brightness4Icon from "@mui/icons-material/Brightness4";
 import Brightness7Icon from "@mui/icons-material/Brightness7";
 import LoginIcon from "@mui/icons-material/Login";
 import LogoutIcon from "@mui/icons-material/Logout";
+import DroneIcon from "@mui/icons-material/PropaneTank";
 import { useColorMode } from "../theme";
 import "../index.css";
+import { SxProps, Theme } from "@mui/material/styles";
 
 interface HeaderProps {
   isLoggedIn?: boolean;
   setIsLoggedIn?: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const NavButton: React.FC<{ title: string; onClick?: () => void; children?: React.ReactNode }> = ({ title, onClick, children }) => (
+interface NavButtonProps {
+  title: string;
+  onClick?: () => void;
+  children?: React.ReactNode;
+  sx?: SxProps<Theme>;
+}
+
+const NavButton: React.FC<NavButtonProps> = ({ title, onClick, children, sx }) => (
   <Tooltip title={title}>
-    <IconButton color="inherit" onClick={onClick} size="large" sx={{ ml: 1 }}>
+    <IconButton color="inherit" onClick={onClick} size="large" sx={{ ml: 1, ...sx }}>
       {children}
     </IconButton>
   </Tooltip>
@@ -51,20 +60,38 @@ export default function Header({ isLoggedIn, setIsLoggedIn }: HeaderProps) {
     }
   };
 
+  const iconStyle = {
+    color: '#1e40af',
+    "&:hover": {
+      color: '#2563eb'
+    }
+  };
+
   return (
-    <AppBar position="static" color="primary">
+    <AppBar
+      position="static"
+      sx={{
+        background:
+          muiTheme.palette.mode === "dark"
+            ? "linear-gradient(to right, #0f172a, #1e293b)"
+            : "linear-gradient(to right, #ffffff, #f8fafc)",
+        boxShadow:
+          muiTheme.palette.mode === "dark"
+            ? "0 4px 20px rgba(0,0,0,0.4)"
+            : "0 4px 20px rgba(0,0,0,0.1)",
+      }}
+    >
       <Toolbar sx={{ display: "flex", justifyContent: "space-between", gap: 2 }}>
         {/* Left: logo + title */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 2, cursor: "pointer" }} onClick={go("/")}>
           <img
-            src="/drone-the-change.png"
+            src={muiTheme.palette.mode === "dark" ? "/drone-the-change-dark.png" : "/drone-the-change.png"}
             alt="Drone The Change"
             style={{
               height: "60px",
               width: "auto",
               objectFit: "contain",
-              filter: muiTheme.palette.mode === "dark" ? "brightness(1)" : "brightness(0.9)",
-              transition: "filter 0.3s ease",
+              transition: "all 0.3s ease",
             }}
             onError={(e) => {
               console.error("Failed to load logo");
@@ -78,33 +105,42 @@ export default function Header({ isLoggedIn, setIsLoggedIn }: HeaderProps) {
           {/* show nav only when logged in */}
           {isLoggedIn && (
             <>
-              <NavButton title="Dashboard" onClick={go("/")}>
+              <NavButton title="Dashboard" onClick={go("/")} sx={iconStyle}>
                 <HomeIcon />
               </NavButton>
 
-              <NavButton title="View Drones" onClick={go("/view-drones")}>
+              <NavButton title="View Drones" onClick={go("/view-drones")} sx={iconStyle}>
                 <MapIcon />
               </NavButton>
 
-              <NavButton title="Manage Missions" onClick={go("/manage-missions")}>
+              <NavButton title="Manage Drones" onClick={go("/manage-drones")} sx={iconStyle}>
+                <DroneIcon />
+              </NavButton>
+
+              <NavButton title="Manage Missions" onClick={go("/manage-missions")} sx={iconStyle}>
                 <ListAltIcon />
               </NavButton>
 
-              <NavButton title="Settings" onClick={go("/settings")}>
+              <NavButton title="Settings" onClick={go("/settings")} sx={iconStyle}>
                 <SettingsIcon />
               </NavButton>
             </>
           )}
 
-          {/* theme toggle (always visible) */}
+          {/* theme toggle with updated colors */}
           <NavButton
             title={muiTheme.palette.mode === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
             onClick={colorMode.toggleColorMode}
+            sx={iconStyle}
           >
             {muiTheme.palette.mode === "dark" ? <Brightness7Icon /> : <Brightness4Icon />}
           </NavButton>
 
-          <NavButton title={isLoggedIn ? "Logout" : "Login"} onClick={handleAuthClick}>
+          <NavButton
+            title={isLoggedIn ? "Logout" : "Login"}
+            onClick={handleAuthClick}
+            sx={iconStyle}
+          >
             {isLoggedIn ? <LogoutIcon /> : <LoginIcon />}
           </NavButton>
         </Box>

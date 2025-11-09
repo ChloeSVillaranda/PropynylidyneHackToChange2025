@@ -1,12 +1,13 @@
-export type UserRole = "user" | "admin";
+export type UserRole = "admin" | "user";
 
-export type User = {
+export interface User {
   email: string;
   fullName: string;
+  password: string;
   role: UserRole;
-  createdAt: string;
   lastLoginAt?: string;
   accessLevel?: string[];
-  metadata?: Record<string, string | number | boolean | null>;
-};
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+}
 
