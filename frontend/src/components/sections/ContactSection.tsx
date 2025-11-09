@@ -1,8 +1,21 @@
 import { useState } from "react";
-import { Box, Container, Grid, Paper, TextField, Typography, Button } from "@mui/material";
+import { Box, Container, Grid, Paper, TextField, Typography, Button, useTheme } from "@mui/material";
+
+interface ContactFormState {
+  name: string;
+  email: string;
+  message: string;
+}
 
 export default function ContactSection() {
-  const [formState, setFormState] = useState({ name: "", email: "", message: "" });
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+
+  const [formState, setFormState] = useState<ContactFormState>({ 
+    name: "", 
+    email: "", 
+    message: "" 
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -11,19 +24,35 @@ export default function ContactSection() {
   };
 
   return (
-    <Box component="section" id="contact" sx={{ bgcolor: "#0b1220", color: "white", py: 8 }}>
+    <Box component="section" id="contact" sx={{
+      bgcolor: isDark ? '#0b1220' : '#f8fafc',
+      color: isDark ? 'white' : '#1e293b',
+      py: 8,
+      borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+    }}>
       <Container maxWidth="lg">
         <Grid container spacing={4}>
           <Grid item xs={12} md={5}>
-            <Typography variant="h3" component="h2" gutterBottom fontWeight="bold">
+            <Typography variant="h3" component="h2" gutterBottom fontWeight="bold"
+              sx={{
+                color: isDark ? 'white' : '#1e293b',
+                mb: 4
+              }}>
               Contact Us
             </Typography>
-            <Typography sx={{ color: "#cbd5e1", mb: 4 }}>
+            <Typography sx={{ 
+              color: isDark ? '#cbd5e1' : '#475569',
+              mb: 4 
+            }}>
               Need assistance or want to learn more about our services?
               Fill out the form and we'll get back to you.
             </Typography>
             
-            <Box component="ul" sx={{ listStyle: "none", p: 0, color: "#94a3b8" }}>
+            <Box component="ul" sx={{ 
+              listStyle: "none",
+              p: 0,
+              color: isDark ? '#94a3b8' : '#64748b'
+            }}>
               {[
                 { label: "Email", value: "info@dronethechange.example" },
                 { label: "Phone", value: "+1 (555) 010-0200" },
@@ -38,7 +67,12 @@ export default function ContactSection() {
           </Grid>
 
           <Grid item xs={12} md={7}>
-            <Paper component="form" onSubmit={handleSubmit} sx={{ p: 4 }}>
+            <Paper sx={{
+              p: 4,
+              bgcolor: isDark ? 'rgba(255,255,255,0.05)' : 'white',
+              borderRadius: 2,
+              border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+            }}>
               <Grid container spacing={3}>
                 {[
                   { name: "name", label: "Name", type: "text" },
