@@ -33,8 +33,14 @@ code {
     sans-serif;
 }
 
-.login-button {
+.nav-button {
+  color: white;
   cursor: pointer;
+  transition: color 0.3s; /* smooth hover */
+}
+
+.nav-button:hover {
+  color: #f39c12 !important; /* new color on hover */
 }
 
 input {
