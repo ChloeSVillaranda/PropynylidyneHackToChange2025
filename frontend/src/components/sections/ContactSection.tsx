@@ -17,11 +17,12 @@ export default function ContactSection() {
     message: "" 
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    alert(`Thanks ${formState.name || "there"} — your message was received.`);
-    setFormState({ name: "", email: "", message: "" });
-  };
+// TODO: implement contact form 
+//   const handleSubmit = (e: React.FormEvent) => {
+//     e.preventDefault();
+//     alert(`Thanks ${formState.name || "there"} — your message was received.`);
+//     setFormState({ name: "", email: "", message: "" });
+//   };
 
   return (
     <Box component="section" id="contact" sx={{

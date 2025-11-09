@@ -16,7 +16,6 @@ import LoginIcon from "@mui/icons-material/Login";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { useColorMode } from "../theme";
 import "../index.css";
-import { Typography } from "@mui/material";
 
 interface HeaderProps {
   isLoggedIn?: boolean;
