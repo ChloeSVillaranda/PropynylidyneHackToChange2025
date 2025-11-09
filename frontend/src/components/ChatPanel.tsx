@@ -173,6 +173,7 @@ export default function ChatPanel({ variant = "default", onClose }: ChatPanelPro
             background: isDark ? "rgba(20,24,34,0.8)" : "rgba(255,255,255,0.85)",
             border: `1px solid ${isDark ? "rgba(255,255,255,0.12)" : "rgba(15,23,42,0.1)"}`,
             borderRadius: 3,
+            backdropFilter: "none",
           },
     [isOverlay, isDark, theme.palette]
   );
