@@ -10,10 +10,17 @@ import ManageDrones from './pages/ManageDrones';
 import ManageMissions from './pages/ManageMissions';
 import Settings from './pages/Settings';
 import ViewDrones from './pages/ViewDrones';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      setIsLoggedIn(true);
+    }
+  }, []);
 
   return (
     <AppThemeProvider>
