@@ -24,6 +24,7 @@ export const documentClient = DynamoDBDocumentClient.from(dynamoClient, {
 });
 
 export const DRONES_TABLE = process.env.DRONES_TABLE ?? "drones";
-export const DRONE_IMAGES_TABLE = process.env.DRONE_IMAGES_TABLE ?? "droneImages";
 export const MISSIONS_TABLE = process.env.MISSIONS_TABLE ?? "missions";
+export const USERS_TABLE = process.env.USERS_TABLE ?? "users";
+export const CAMERA_IMAGES_TABLE = process.env.CAMERA_IMAGES_TABLE ?? "cameraImages";
 
