@@ -2,6 +2,7 @@ export interface Drone {
   droneId: string;
   model: string;
   status: DroneStatus;
+  description?: string;
   currentLocation?: {
     latitude: number;
     longitude: number;
@@ -20,6 +21,7 @@ export interface CreateDroneRequest {
   droneId: string;
   model: string;
   status?: DroneStatus;
+  description?: string;
   currentLocation?: {
     latitude: number;
     longitude: number;
@@ -33,6 +35,7 @@ export interface CreateDroneRequest {
 export interface UpdateDroneRequest {
   model?: string;
   status?: DroneStatus;
+  description?: string; // Added to update request
   currentLocation?: {
     latitude: number;
     longitude: number;

@@ -12,6 +12,7 @@ function CreateDroneModal({ onClose, onCreate, loading }: CreateDroneModalProps)
     droneId: '',
     model: '',
     status: 'Available',
+    description: '',
     currentLocation: { latitude: 0, longitude: 0 },
     metadata: { firmware: '', batteryLevel: 100 }
   });
@@ -158,6 +159,28 @@ function CreateDroneModal({ onClose, onCreate, loading }: CreateDroneModalProps)
               <option value="Busy">Busy</option>
               <option value="Maintenance">Maintenance</option>
             </select>
+          </div>
+
+          <div style={{ marginBottom: '1rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+              Description
+            </label>
+            <textarea
+              name="description"
+              value={formData.description || ''}
+              onChange={handleChange as any}
+              placeholder="Brief description of the drone"
+              rows={3}
+              style={{
+                width: '100%',
+                padding: '0.5rem',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                boxSizing: 'border-box',
+                fontFamily: 'inherit',
+                resize: 'vertical'
+              }}
+            />
           </div>
 
           <div style={{ marginBottom: '1rem' }}>

@@ -22,6 +22,7 @@ export type BaseEntity = {
 export type Drone = BaseEntity & {
   model: string;
   status: DroneStatus;
+  description?: string;
   currentLocation?: GeoPoint;
   patrolSchedule?: PatrolSchedule;
   lastImageTimestamp?: string;

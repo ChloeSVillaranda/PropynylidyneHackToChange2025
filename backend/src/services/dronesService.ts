@@ -18,8 +18,7 @@ export const listDrones = async (): Promise<Drone[]> => {
 
   const result = await documentClient.send(command);
 
-  // Filter drones in memory (since we can't filter by entityType anymore)
-  return ((result.Items as any[]) ?? []).filter(item => !item.missionId);
+  return ((result.Items as any[]) ?? []).filter(item => item.model && !item.missionId);
 };
 
 export const getDroneById = async (droneId: string): Promise<Drone | null> => {
