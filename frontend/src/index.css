@@ -38,3 +38,9 @@ input {
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
 }
+
+#forgot-password {
+  color: var(--main-medium-blue);
+  cursor: pointer;
+  text-decoration: underline;
+}
