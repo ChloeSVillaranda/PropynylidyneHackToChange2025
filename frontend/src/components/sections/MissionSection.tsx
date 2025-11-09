@@ -23,7 +23,9 @@ const MissionCard = ({ icon, title, description }: MissionCardProps) => {
     >
       <Paper elevation={0} sx={{
         p: 4,
-        height: '100%',
+        height: '280px', // Fixed height for all cards
+        display: 'flex',
+        flexDirection: 'column',
         background: isDark 
           ? 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)'
           : 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.95) 100%)',
@@ -36,20 +38,21 @@ const MissionCard = ({ icon, title, description }: MissionCardProps) => {
           boxShadow: isDark 
             ? '0 20px 40px rgba(0,0,0,0.3)'
             : '0 20px 40px rgba(0,0,0,0.1)',
-          border: `1px solid ${isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)'}`,
         }
       }}>
-        <Box className="icon-container">
+        <Box sx={{ mb: 2 }}>
           {icon}
         </Box>
-        <Typography variant="h6" gutterBottom sx={{ 
+        <Typography variant="h6" sx={{ 
+          mb: 2,
           color: isDark ? 'white' : '#1e293b',
           fontWeight: 600 
         }}>
           {title}
         </Typography>
         <Typography variant="body2" sx={{ 
-          color: isDark ? '#cbd5e1' : '#475569'
+          color: isDark ? '#cbd5e1' : '#475569',
+          flex: 1  // Allow description to take remaining space
         }}>
           {description}
         </Typography>
@@ -104,14 +107,18 @@ export default function MissionSection() {
             gutterBottom
             align="center"
             sx={{
-              fontWeight: 900,
+              fontWeight: 800,
               fontSize: { xs: '3rem', md: '4.5rem' },
               fontFamily: '"Poppins", sans-serif',
-              background: 'linear-gradient(to right, #0f2447, #3b82f6)',
+              background: isDark
+                ? 'linear-gradient(to right, #93c5fd, #60a5fa)'
+                : 'linear-gradient(to right, #0f2447, #3b82f6)',
               backgroundClip: 'text',
               WebkitBackgroundClip: 'text',
               color: 'transparent',
-              textShadow: '0 4px 15px rgba(59,130,246,0.4)',
+              textShadow: isDark
+                ? '0 2px 10px rgba(147,197,253,0.3)'
+                : '0 2px 10px rgba(59,130,246,0.3)',
               mb: 4,
               letterSpacing: '-0.02em'
             }}

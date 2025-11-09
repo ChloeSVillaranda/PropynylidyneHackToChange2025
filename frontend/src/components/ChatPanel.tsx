@@ -166,30 +166,18 @@ export default function ChatPanel({
       height: "100%",
       width: "100%",
       borderRadius: isOverlay ? 2.5 : 3,
-      border: isOverlay
-        ? `1px solid ${
-            isDark ? "rgba(248,250,252,0.1)" : "rgba(15,23,42,0.08)"
-          }`
-        : `1px solid ${
-            isDark ? "rgba(255,255,255,0.12)" : "rgba(15,23,42,0.1)"
-          }`,
-      background: isOverlay
-        ? isDark
-          ? "rgba(15,23,42,0.42)"
-          : "rgba(255,255,255,0.62)"
-        : isDark
-        ? "rgba(20,24,34,0.8)"
-        : "rgba(255,255,255,0.85)",
-      backdropFilter: isOverlay ? "blur(10px)" : "none",
-      color: isOverlay
-        ? theme.palette.getContrastText(isDark ? "#081223" : "#fdfdfd")
-        : theme.palette.text.primary,
-      boxShadow: isOverlay
-        ? "0 18px 36px rgba(15,23,42,0.28)"
+      border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(15,23,42,0.1)'}`,
+      background: isDark
+        ? 'linear-gradient(145deg, rgba(30,41,59,0.95), rgba(15,23,42,0.95))'
+        : 'rgba(255,255,255,0.85)',
+      backdropFilter: "blur(10px)",
+      color: isDark ? '#f1f5f9' : theme.palette.text.primary,
+      boxShadow: isDark 
+        ? '0 8px 32px rgba(0,0,0,0.4)'
         : theme.shadows[2],
       maxHeight: isOverlay ? "70vh" : "none",
     }),
-    [isOverlay, isDark, theme.palette]
+    [isOverlay, isDark, theme]
   );
 
   const listStyles = useMemo<SxProps<Theme>>(
@@ -197,24 +185,20 @@ export default function ChatPanel({
       flexGrow: 1,
       overflowY: "auto",
       borderRadius: 2,
-      border: isOverlay
-        ? `1px solid ${
-            isDark ? "rgba(255,255,255,0.16)" : "rgba(15,23,42,0.12)"
-          }`
-        : `1px solid ${
-            isDark ? "rgba(255,255,255,0.08)" : "rgba(15,23,42,0.08)"
-          }`,
+      border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(15,23,42,0.08)'}`,
       p: isOverlay ? 1.25 : 1.5,
       mb: isOverlay ? 1.5 : 2,
-      background: isOverlay
-        ? isDark
-          ? "rgba(8,11,17,0.32)"
-          : "rgba(248,250,252,0.45)"
-        : isDark
-        ? "rgba(9,12,18,0.8)"
-        : "rgba(248,250,252,0.7)",
+      background: isDark
+        ? 'linear-gradient(145deg, rgba(15,23,42,0.8), rgba(30,41,59,0.8))'
+        : 'rgba(248,250,252,0.7)',
+      '& .MuiTypography-root': {
+        color: isDark ? '#f1f5f9' : 'inherit'
+      },
+      '& .MuiTypography-caption': {
+        color: isDark ? '#94a3b8' : theme.palette.text.secondary
+      }
     }),
-    [isOverlay, isDark]
+    [isOverlay, isDark, theme]
   );
 
   return (
