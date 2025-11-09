@@ -22,7 +22,12 @@ export const missionService = {
   getAllMissions: async (): Promise<Mission[]> => {
     const res = await fetch(`${apiConfig.baseURL}/missions`, {
       method: 'GET',
-      headers: getAuthHeaders(),
+      headers: {
+        ...getAuthHeaders(),
+        'Cache-Control': 'no-cache',
+        Pragma: 'no-cache',
+      },
+      cache: 'no-store',
     });
     if (!res.ok) throw new Error('Failed to fetch missions');
     const data = await res.json();
@@ -32,7 +37,12 @@ export const missionService = {
   getMissionById: async (missionId: string): Promise<Mission> => {
     const res = await fetch(`${apiConfig.baseURL}/missions/${missionId}`, {
       method: 'GET',
-      headers: getAuthHeaders(),
+      headers: {
+        ...getAuthHeaders(),
+        'Cache-Control': 'no-cache',
+        Pragma: 'no-cache',
+      },
+      cache: 'no-store',
     });
     if (!res.ok) throw new Error(`Mission not found: ${missionId}`);
     const data = await res.json();

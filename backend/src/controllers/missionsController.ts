@@ -258,6 +258,7 @@ export const removeMission = async (req: Request, res: Response) => {
     await deleteMission(missionId);
     res.status(204).send();
   } catch (error) {
+    console.error(`[removeMission] Failed to delete mission ${missionId}:`, error);
     if ((error as Error).name === "ConditionalCheckFailedException") {
       res.status(404).json({ message: `Mission ${id} not found` });
       return;

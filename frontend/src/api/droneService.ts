@@ -11,7 +11,12 @@ export const droneService = {
     
     const response = await fetch(`${apiConfig.baseURL}/drones`, {
       method: 'GET',
-      headers: getAuthHeaders(),
+      headers: {
+        ...getAuthHeaders(),
+        'Cache-Control': 'no-cache',
+        Pragma: 'no-cache',
+      },
+      cache: 'no-store',
     });
     
     console.log('[droneService] Response status:', response.status);

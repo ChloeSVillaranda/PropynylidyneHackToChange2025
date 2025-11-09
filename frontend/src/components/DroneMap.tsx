@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup, Polyline } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import droneIconImg from "../assets/drone.png";
@@ -7,8 +7,8 @@ import patrolIconImg from "../assets/drone-blue.png";
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
-import { cameraService } from "../api";
-import { CameraSnapshot, RoutePoint } from "../types";
+import { cameraService, droneService } from "../api";
+import { CameraSnapshot, Drone } from "../types";
 
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: markerIcon2x,
@@ -38,117 +38,49 @@ const cameraMarkerIcon = L.divIcon({
   popupAnchor: [0, -28],
 });
 
-type SimulatedDrone = {
-  id: number;
-  type: "free" | "patrol";
-  pos: [number, number];
-  target: [number, number];
-  route: [number, number][];
-  routeIndex: number;
-};
-
 export default function DroneMap() {
   const calgaryCoords: [number, number] = [51.0447, -114.0719];
-  const bounds = { north: 51.15, south: 51.0, east: -113.9, west: -114.2 };
 
-  const testpoint: RoutePoint = {
-    latitude: 51.1,
-    longitude: -114.15,
-  };
-
-  const [drones, setDrones] = useState<SimulatedDrone[]>(() => [
-    ...Array.from({ length: 5 }, (_, i) => ({
-      id: i + 1,
-      type: "free" as const,
-      pos: [
-        Math.random() * (bounds.north - bounds.south) + bounds.south,
-        Math.random() * (bounds.east - bounds.west) + bounds.west,
-      ] as [number, number],
-      target: [
-        Math.random() * (bounds.north - bounds.south) + bounds.south,
-        Math.random() * (bounds.east - bounds.west) + bounds.west,
-      ] as [number, number],
-      route: [],
-      routeIndex: 0,
-    })),
-    {
-      id: 6,
-      type: "patrol",
-      pos: [51.1, -114.15] as [number, number],
-      route: [
-        [testpoint.latitude, testpoint.longitude] as [number, number],
-        [51.12, -114.142] as [number, number],
-        [51.12, -114.12] as [number, number],
-        [51.1, -114.128] as [number, number],
-      ],
-      routeIndex: 0,
-      target: [51.1, -114.15] as [number, number],
-    },
-    {
-      id: 7,
-      type: "patrol",
-      pos: [51.0, -113.98] as [number, number],
-      route: [
-        [51.0, -113.98] as [number, number],
-        [51.02, -113.972] as [number, number],
-        [51.02, -113.95] as [number, number],
-        [51.0, -113.958] as [number, number],
-      ],
-      routeIndex: 0,
-      target: [51.0, -113.98] as [number, number],
-    },
-  ]);
+  const [drones, setDrones] = useState<Drone[]>([]);
+  const [isLoadingDrones, setIsLoadingDrones] = useState(true);
+  const [droneError, setDroneError] = useState<string | null>(null);
 
   const [cameraSnapshots, setCameraSnapshots] = useState<CameraSnapshot[]>([]);
   const [cameraError, setCameraError] = useState<string | null>(null);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setDrones((prev) =>
-        prev.map((drone) => {
-          const [lat, lng] = drone.pos;
-          let tLat: number;
-          let tLng: number;
+    let isMounted = true;
 
-          if (drone.type === "patrol") {
-            const target = drone.route[drone.routeIndex];
-            [tLat, tLng] = target;
+    const loadDrones = async () => {
+      try {
+        const fetchedDrones = await droneService.getAllDrones();
+        if (!isMounted) {
+          return;
+        }
 
-            const reached =
-              Math.abs(tLat - lat) < 0.0003 && Math.abs(tLng - lng) < 0.0003;
+        setDrones(fetchedDrones);
+        setDroneError(null);
+      } catch (error) {
+        console.error("[DroneMap] Failed to load drones", error);
+        if (isMounted) {
+          setDroneError("Unable to load drone positions.");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingDrones(false);
+        }
+      }
+    };
 
-            if (reached) {
-              const nextIndex = (drone.routeIndex + 1) % drone.route.length;
-              return { ...drone, routeIndex: nextIndex };
-            }
-          } else {
-            [tLat, tLng] = drone.target;
-          }
+    void loadDrones();
+    const interval = window.setInterval(() => {
+      void loadDrones();
+    }, 10000);
 
-          const step = 0.0005;
-          const newLat =
-            Math.abs(tLat - lat) < step ? tLat : lat + Math.sign(tLat - lat) * step;
-          const newLng =
-            Math.abs(tLng - lng) < step ? tLng : lng + Math.sign(tLng - lng) * step;
-
-          const newTarget =
-            drone.type === "free" && newLat === tLat && newLng === tLng
-              ? [
-                  Math.random() * (bounds.north - bounds.south) + bounds.south,
-                  Math.random() * (bounds.east - bounds.west) + bounds.west,
-                ]
-              : drone.target;
-
-          return {
-            ...drone,
-            pos: [newLat, newLng],
-            target: newTarget as [number, number],
-          };
-        })
-      );
-    }, 100);
-
-    return () => clearInterval(interval);
+    return () => {
+      isMounted = false;
+      window.clearInterval(interval);
+    };
   }, []);
 
   useEffect(() => {
@@ -199,31 +131,45 @@ export default function DroneMap() {
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
 
-      {drones.map((drone) => (
-        <Marker
-          key={drone.id}
-          position={drone.pos}
-          icon={drone.type === "patrol" ? patrolDroneIcon : droneIcon}
-        >
-          <Popup>
-            <strong>Drone {drone.id}</strong>
-            <br />
-            Type: {drone.type}
-          </Popup>
-        </Marker>
-      ))}
-
       {drones
-        .filter((d) => d.type === "patrol")
-        .map((d) => (
-          <Polyline
-            key={`route-${d.id}`}
-            positions={d.route}
-            color="red"
-            weight={3}
-            opacity={0.7}
-          />
-        ))}
+        .filter(
+          (drone) =>
+            typeof drone.currentLocation?.latitude === "number" &&
+            typeof drone.currentLocation?.longitude === "number"
+        )
+        .map((drone) => {
+          const position = [
+            drone.currentLocation!.latitude,
+            drone.currentLocation!.longitude,
+          ] as [number, number];
+          const icon =
+            drone.status === "Busy" ? patrolDroneIcon : droneIcon;
+
+          return (
+            <Marker key={drone.droneId} position={position} icon={icon}>
+              <Popup>
+                <strong>{drone.droneId}</strong>
+                <br />
+                Model: {drone.model}
+                <br />
+                Status: {drone.status}
+                {drone.metadata?.batteryLevel !== undefined && (
+                  <>
+                    <br />
+                    Battery: {drone.metadata.batteryLevel}%
+                  </>
+                )}
+                {drone.lastImageTimestamp && (
+                  <>
+                    <br />
+                    Last Update:{" "}
+                    {new Date(drone.lastImageTimestamp).toLocaleString()}
+                  </>
+                )}
+              </Popup>
+            </Marker>
+          );
+        })}
 
       {validCameraSnapshots.map((snapshot) => (
         <Marker
@@ -259,9 +205,9 @@ export default function DroneMap() {
         </Marker>
       ))}
 
-      {cameraError && (
+      {(cameraError || (droneError && !isLoadingDrones)) && (
         <Popup position={calgaryCoords}>
-          <p>{cameraError}</p>
+          <p>{cameraError ?? droneError}</p>
         </Popup>
       )}
     </MapContainer>

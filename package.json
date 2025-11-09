@@ -2,5 +2,8 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.17",
     "autoprefixer": "^10.4.21"
+  },
+  "dependencies": {
+    "@aws-sdk/s3-request-presigner": "^3.927.0"
   }
 }
