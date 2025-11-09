@@ -7,6 +7,7 @@ import patrolIconImg from '../assets/drone-blue.png';
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+import { RoutePoint } from '../types/mission';
 
 L.Icon.Default.mergeOptions({
     iconRetinaUrl: markerIcon2x,
@@ -29,9 +30,15 @@ const patrolDroneIcon = new L.Icon({
 });
 
 export default function DroneMap() {
-    const calgaryCoords = [51.0447, -114.0719];
+    const calgaryCoords: [number, number] = [51.0447, -114.0719];
     //city limits coordinates
     const bounds = {north: 51.15, south: 51.0, east: -113.9, west: -114.2};
+
+    const testpoint: RoutePoint = {
+        latitude: 51.1,
+        longitude: -114.15
+    };
+
 
     //initializing free roaming and patrol drones inside the bounds
     const [drones, setDrones] = useState([
@@ -42,37 +49,41 @@ export default function DroneMap() {
             pos: [
                 Math.random() * (bounds.north - bounds.south) + bounds.south,
                 Math.random() * (bounds.east - bounds.west) + bounds.west,
-            ],
+            ] as [number, number],
             target: [
                 Math.random() * (bounds.north - bounds.south) + bounds.south,
                 Math.random() * (bounds.east - bounds.west) + bounds.west,
             ],
+            route: [],
+            routeIndex: 0
         })),
 
         //patrol drones
         {
             id: 6,
             type: 'patrol',
-            pos: [51.1, -114.15],
+            pos: [51.1, -114.15] as [number, number],
             route: [
-                [51.1, -114.15],
-                [51.12, -114.142],
-                [51.12, -114.12],
-                [51.1, -114.128],
+                [testpoint.latitude,testpoint.longitude] as [number, number],
+                [51.12, -114.142] as [number, number],
+                [51.12, -114.12] as [number, number],
+                [51.1, -114.128] as [number, number],
             ],
             routeIndex: 0,
+            target: [51.1, -114.15]
         },
         {
             id: 7,
             type: 'patrol',
-            pos: [51.0, -113.98],
+            pos: [51.0, -113.98] as [number, number],
             route: [
-                [51.0, -113.98],
-                [51.02, -113.972],
-                [51.02, -113.95],
-                [51.0, -113.958],
+                [51.0, -113.98] as [number, number],
+                [51.02, -113.972] as [number, number],
+                [51.02, -113.95] as [number, number],
+                [51.0, -113.958] as [number, number],
             ],
             routeIndex: 0,
+            target: [51.0, -113.98]
         },
     ]);
 

@@ -1,5 +1,22 @@
-import { CreateMissionRequest, Mission, UpdateMissionRequest } from '../types';
+import { CreateMissionRequest, Mission, RouteSuggestionInput, RoutePoint, UpdateMissionRequest } from '../types';
 import { apiConfig, getAuthHeaders } from './config';
+
+const normalizeRoutePoints = (route?: RoutePoint[]) =>
+  Array.isArray(route)
+    ? route.map(p => ({
+        latitude: Number(p.latitude),
+        longitude: Number(p.longitude),
+      }))
+    : undefined;
+
+const normalizeRouteSuggestions = (suggestions?: RouteSuggestionInput[]) =>
+  Array.isArray(suggestions)
+    ? suggestions.map(suggestion => ({
+        ...suggestion,
+        summary: suggestion.summary.trim(),
+        suggestedRoute: normalizeRoutePoints(suggestion.suggestedRoute),
+      }))
+    : undefined;
 
 export const missionService = {
   getAllMissions: async (): Promise<Mission[]> => {
@@ -28,11 +45,11 @@ export const missionService = {
       missionType: missionData.missionType,
       startTime: missionData.startTime,
       endTime: missionData.endTime,
-      route: (missionData.route || []).map(p => ({
-        latitude: Number(p.latitude),
-        longitude: Number(p.longitude)
-      })),
-      ...(missionData.metadata && { metadata: missionData.metadata })
+      route: normalizeRoutePoints(missionData.route) ?? [],
+      ...(missionData.metadata && { metadata: missionData.metadata }),
+      ...(missionData.routeSuggestions && {
+        routeSuggestions: normalizeRouteSuggestions(missionData.routeSuggestions),
+      }),
     };
 
     const res = await fetch(`${apiConfig.baseURL}/missions`, {
@@ -55,7 +72,13 @@ export const missionService = {
     const res = await fetch(`${apiConfig.baseURL}/missions/${missionId}`, {
       method: 'PATCH',
       headers: getAuthHeaders(),
-      body: JSON.stringify(missionData),
+      body: JSON.stringify({
+        ...missionData,
+        ...(missionData.route && { route: normalizeRoutePoints(missionData.route) }),
+        ...(missionData.routeSuggestions && {
+          routeSuggestions: normalizeRouteSuggestions(missionData.routeSuggestions),
+        }),
+      }),
     });
 
     if (!res.ok) {
