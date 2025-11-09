@@ -304,36 +304,11 @@ const options: OAS3Options = {
             }
           }
         },
-        DroneImage: {
-          type: "object",
-          required: ["imageId", "droneId", "timestamp", "s3Uri", "accessLevel"],
-          properties: {
-            imageId: { type: "string" },
-            droneId: { type: "string" },
-            timestamp: { type: "string", format: "date-time" },
-            s3Uri: { type: "string", example: "s3://bucket/drone-001/image.jpg" },
-            accessLevel: {
-              type: "string",
-              enum: ["user", "admin"]
-            },
-            metadata: {
-              type: "object",
-              additionalProperties: {
-                type: "string"
-              }
-            }
-          }
-        },
-        CreateDroneImageRequest: {
-          allOf: [{ $ref: "#/components/schemas/DroneImage" }],
-          required: ["imageId", "timestamp", "s3Uri", "accessLevel"]
-        }
       }
     },
     tags: [
       { name: "Health" },
       { name: "Drones" },
-      { name: "Drone Images" },
       { name: "Missions" },
       { name: "Users" },
       { name: "Cameras" }
@@ -641,88 +616,6 @@ const options: OAS3Options = {
               }
             },
             "404": { description: "Not found" }
-          }
-        }
-      },
-      "/drones/{id}/images": {
-        get: {
-          tags: ["Drone Images"],
-          summary: "List drone images",
-          parameters: [
-            { in: "path", name: "id", required: true, schema: { type: "string" } },
-            {
-              in: "query",
-              name: "startAfter",
-              required: false,
-              schema: { type: "string" }
-            },
-            {
-              in: "query",
-              name: "limit",
-              required: false,
-              schema: { type: "integer", minimum: 1, maximum: 100 }
-            }
-          ],
-          responses: {
-            "200": {
-              description: "Images",
-              content: {
-                "application/json": {
-                  schema: {
-                    type: "object",
-                    properties: {
-                      data: {
-                        type: "array",
-                        items: { $ref: "#/components/schemas/DroneImage" }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        post: {
-          tags: ["Drone Images"],
-          summary: "Create drone image metadata",
-          parameters: [
-            { in: "path", name: "id", required: true, schema: { type: "string" } }
-          ],
-          requestBody: {
-            required: true,
-            content: {
-              "application/json": {
-                schema: { $ref: "#/components/schemas/CreateDroneImageRequest" }
-              }
-            }
-          },
-          responses: {
-            "201": {
-              description: "Created",
-              content: {
-                "application/json": {
-                  schema: {
-                    type: "object",
-                    properties: {
-                      data: { $ref: "#/components/schemas/DroneImage" }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "/drones/{id}/images/{timestamp}": {
-        delete: {
-          tags: ["Drone Images"],
-          summary: "Delete drone image metadata",
-          parameters: [
-            { in: "path", name: "id", required: true, schema: { type: "string" } },
-            { in: "path", name: "timestamp", required: true, schema: { type: "string" } }
-          ],
-          responses: {
-            "204": { description: "Deleted" }
           }
         }
       },
