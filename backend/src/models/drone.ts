@@ -1,5 +1,3 @@
-export type EntityType = "DRONE" | "MISSION";
-
 export type DroneStatus = "Available" | "Busy" | "Maintenance";
 
 export type GeoPoint = {

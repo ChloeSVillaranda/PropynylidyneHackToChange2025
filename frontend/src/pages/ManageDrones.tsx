@@ -72,7 +72,6 @@ function ManageDrones() {
     setLoading(true);
     setError('');
     try {
-      // Only send fields that can be updated (exclude droneId, entityType)
       const updateData = {
         model: updatedDrone.model,
         status: updatedDrone.status,

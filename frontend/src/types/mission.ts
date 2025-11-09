@@ -1,7 +1,6 @@
 export interface Mission {
-  droneId: string; // The actual drone ID
-  entityType: 'MISSION';
-  missionId?: string; // add missionId as optional attribute
+  missionId: number;
+  droneId: string;
   startTime?: string;
   endTime?: string;
   route?: RoutePoint[];

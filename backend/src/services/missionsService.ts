@@ -1,4 +1,3 @@
-import { DRONES_TABLE, documentClient } from "../config/dynamoClient.js";
 import {
   DeleteCommand,
   GetCommand,

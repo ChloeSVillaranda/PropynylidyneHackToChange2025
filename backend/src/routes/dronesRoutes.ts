@@ -21,15 +21,13 @@ const router = Router();
 router.get("/", getDrones);
 router.post("/", createDroneHandler);
 router.get("/:id/detail", getDroneDetail);
-router.get("/:id", getDrone);
-router.put("/:id", updateDroneHandler);
-router.delete("/:id", removeDrone);
-router.patch("/:droneId", updateDroneHandler);
 router.get("/:id/location", getDroneLocation);
-
 router.get("/:id/images", listImages);
 router.post("/:id/images", addImage);
 router.delete("/:id/images/:timestamp", removeImage);
+router.get("/:id", getDrone);
+router.patch("/:id", updateDroneHandler);
+router.delete("/:id", removeDrone);
 
 export default router;
 
