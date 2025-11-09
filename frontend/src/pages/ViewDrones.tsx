@@ -44,16 +44,11 @@ function ViewDrones() {
     }
   };
 
-  const handleViewDrone = (drone: Drone) => {
-    setSelectedDrone(drone);
-    setIsViewModalOpen(true);
-  };
-
   const renderDroneCard = (drone: Drone) => {
     const statusColors = {
-      Available: { background: "#10b981", color: "white" }, // Softer green
-      Busy: { background: "#f97316", color: "white" }, // Softer orange
-      Maintenance: { background: "#ef4444", color: "white" } // Softer red
+      Available: { background: "#10b981", color: "white" },
+      Busy: { background: "#f97316", color: "white" },
+      Maintenance: { background: "#ef4444", color: "white" }
     };
 
     const colorStyles = statusColors[drone.status as keyof typeof statusColors] ?? {
