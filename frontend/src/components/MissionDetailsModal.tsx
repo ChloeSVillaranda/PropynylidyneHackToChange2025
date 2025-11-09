@@ -29,7 +29,6 @@ function fromInputDateTime(value: string | undefined) {
 function MissionDetailsModal({ mission, onClose, onUpdate, loading }: MissionDetailsModalProps) {
   const [formData, setFormData] = useState<Mission>(() => ({
     droneId: mission.droneId,
-    entityType: 'MISSION',
     startTime: mission.startTime,
     endTime: mission.endTime,
     route: mission.route ?? [],
@@ -43,7 +42,6 @@ function MissionDetailsModal({ mission, onClose, onUpdate, loading }: MissionDet
   useEffect(() => {
     setFormData({
       droneId: mission.droneId,
-      entityType: 'MISSION',
       startTime: mission.startTime,
       endTime: mission.endTime,
       route: mission.route ?? [],

@@ -16,11 +16,10 @@ const router = Router();
 router.get("/", getDrones);
 router.post("/", createDroneHandler);
 router.get("/:id/detail", getDroneDetail);
-router.get("/:id", getDrone);
-router.put("/:id", updateDroneHandler);
-router.delete("/:id", removeDrone);
-router.patch("/:droneId", updateDroneHandler);
 router.get("/:id/location", getDroneLocation);
+router.get("/:id", getDrone);
+router.patch("/:id", updateDroneHandler);
+router.delete("/:id", removeDrone);
 
 export default router;
 

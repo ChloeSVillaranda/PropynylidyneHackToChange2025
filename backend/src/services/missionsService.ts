@@ -31,7 +31,8 @@ export const listMissions = async (): Promise<Mission[]> => {
 
   const result = await documentClient.send(command);
 
-  return (result.Items as Mission[]) ?? [];
+  // Filter missions in memory (items that have missionId)
+  return ((result.Items as any[]) ?? []).filter(item => item.missionId);
 };
 
 export const listMissionsByDrone = async (droneId: string): Promise<Mission[]> => {
@@ -44,8 +45,8 @@ export const listMissionsByDrone = async (droneId: string): Promise<Mission[]> =
   });
 
   const result = await documentClient.send(command);
-
-  return (result.Items as Mission[]) ?? [];
+  // Filter missions in memory
+  return ((result.Items as any[]) ?? []).filter(item => item.missionId);
 };
 
 export const getMissionById = async (missionId: number): Promise<Mission | null> => {
@@ -55,7 +56,6 @@ export const getMissionById = async (missionId: number): Promise<Mission | null>
   });
 
   const result = await documentClient.send(command);
-
   return (result.Item as Mission) ?? null;
 };
 
@@ -114,7 +114,6 @@ export const updateMission = async (
   });
 
   const result = await documentClient.send(command);
-
   return (result.Attributes as Mission) ?? null;
 };
 

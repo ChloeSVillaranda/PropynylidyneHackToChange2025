@@ -1,6 +1,6 @@
 export interface Mission {
+  missionId: number;
   droneId: string;
-  entityType: 'MISSION';
   startTime?: string;
   endTime?: string;
   route?: RoutePoint[];
@@ -12,16 +12,18 @@ export interface RoutePoint {
   longitude: number;
 }
 
-export type MissionType = 'Patrol' | 'Emergency' | 'Delivery' | 'Survey' | 'Inspection';
+export type MissionType = 'Patrol' | 'Emergency' | 'Data Collection';
 
 export type MissionStatus = 'pending' | 'active' | 'completed' | 'cancelled' | 'in-progress';
 
 export interface CreateMissionRequest {
   droneId: string;
+  missionId?: string;
   startTime?: string;
   endTime?: string;
   route?: RoutePoint[];
   missionType?: MissionType;
+  metadata?: Record<string, unknown>;
 }
 
 export interface UpdateMissionRequest {

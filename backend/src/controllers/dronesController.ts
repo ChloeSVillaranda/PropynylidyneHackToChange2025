@@ -27,9 +27,18 @@ import { DroneStatus } from "../models/drone.js";
 
 export const getDrones = async (_req: Request, res: Response) => {
   try {
+    console.log('\n========== [getDrones] START ==========');
+    console.log('[getDrones] Fetching all drones at:', new Date().toISOString());
+    
     const drones = await listDrones();
+    
+    console.log('[getDrones] Final result count:', drones.length);
+    console.log('[getDrones] Drone IDs:', drones.map(d => d.droneId));
+    console.log('========== [getDrones] END ==========\n');
+    
     res.json({ data: drones });
   } catch (error) {
+    console.error('[getDrones] Error:', error);
     res.status(500).json({ message: "Failed to fetch drones" });
   }
 };
@@ -55,7 +64,7 @@ export const createDroneHandler = async (req: Request, res: Response) => {
   }
 
   try {
-    const { droneId, model, status: statusInput, ...rest } = dronePayload;
+    const { droneId, model, status: statusInput, description, ...rest } = dronePayload;
 
     if (!model) {
       res.status(400).json({ message: "model is required" });
@@ -63,19 +72,28 @@ export const createDroneHandler = async (req: Request, res: Response) => {
     }
 
     const status = statusInput ? ensureValidStatus(statusInput) : "Available";
-    const saved = await createDrone({
-      entityType: "DRONE",
+    
+    const droneToSave = {
       droneId,
       model,
       status,
+      description, // Now explicitly included
       currentLocation: rest.currentLocation,
       patrolSchedule: rest.patrolSchedule,
       lastImageTimestamp: rest.lastImageTimestamp,
       lastMaintenance: rest.lastMaintenance,
       metadata: rest.metadata
-    });
+    };
+    
+    console.log('[createDroneHandler] Saving drone:', JSON.stringify(droneToSave, null, 2));
+    
+    const saved = await createDrone(droneToSave);
+    
+    console.log('[createDroneHandler] Successfully saved:', saved.droneId);
+    
     res.status(201).json({ data: saved });
   } catch (error) {
+    console.error('[createDroneHandler] Error:', error);
     if ((error as Error).name === "ConditionalCheckFailedException") {
       res.status(409).json({ message: `Drone ${dronePayload.droneId} already exists` });
       return;
@@ -87,23 +105,25 @@ export const createDroneHandler = async (req: Request, res: Response) => {
 
 export const updateDroneHandler = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { droneId } = req.params;
+    const { id } = req.params;
     const updates = req.body;
 
-    console.log(`[updateDrone] Attempting to update drone: ${droneId}`);
+    console.log(`[updateDrone] Attempting to update drone: ${id}`);
     console.log(`[updateDrone] Update data:`, JSON.stringify(updates));
 
     // Check if drone exists first
-    const existingDrone = await getDroneById(droneId);
+    const existingDrone = await getDroneById(id);
+    console.log(`[updateDrone] Existing drone lookup result:`, existingDrone ? 'FOUND' : 'NOT FOUND');
+    
     if (!existingDrone) {
-      console.log(`[updateDrone] Drone not found: ${droneId}`);
+      console.log(`[updateDrone] Drone not found: ${id}`);
       res.status(404).json({ error: "Drone not found" });
       return;
     }
 
     console.log(`[updateDrone] Found existing drone:`, JSON.stringify(existingDrone));
 
-    const updatedDrone = await updateDrone(droneId, updates);
+    const updatedDrone = await updateDrone(id, updates);
     
     console.log(`[updateDrone] Successfully updated drone:`, JSON.stringify(updatedDrone));
     

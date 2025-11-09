@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
-import { missionService } from '../api';
+import { useEffect, useState } from 'react';
+
+import CreateMissionModal from '../components/CreateMissionModal';
 import { Mission } from '../types';
 import MissionDetailsModal from '../components/MissionDetailsModal';
-import CreateMissionModal from '../components/CreateMissionModal';
+import { missionService } from '../api';
 
 function ManageMissions() {
   const [missions, setMissions] = useState<Mission[]>([]);
@@ -45,54 +46,46 @@ function ManageMissions() {
     setSelectedMission(mission);
     setIsViewModalOpen(true);
   };
-
+  
   const handleCreateMission = async (missionData: any) => {
     setLoading(true);
-    setError('');
     try {
-      console.log('Creating mission with data:', missionData);
-      const newMission = await missionService.createMission(missionData);
-      console.log('Mission created successfully:', newMission);
-      
-      setMissions([...missions, newMission]);
+      console.log('Creating mission with form data:', missionData);
+
+      // Just pass the form data to the service; it will transform droneId → assignedDroneId
+      const created = await missionService.createMission(missionData);
+      console.log('Mission created:', created);
+
+      await fetchAllMissions();
       setIsCreateModalOpen(false);
       alert('Mission created successfully!');
-      
-      // Refresh the list
-      await fetchAllMissions();
     } catch (err) {
-      setError((err as Error)?.message || 'Failed to create mission');
-      console.error('Error creating mission:', err);
+      console.error(err);
+      setError((err as Error).message);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleUpdateMission = async (updatedMission: Mission) => {
+  const handleUpdateMission = async (updatedMission: any) => {
     setLoading(true);
-    setError('');
     try {
-      const updateData = {
+      const payload = {
         startTime: updatedMission.startTime,
         endTime: updatedMission.endTime,
-        route: updatedMission.route,
-        missionType: updatedMission.missionType
+        missionType: updatedMission.missionType,
+        route: updatedMission.route.map((p: any) => ({
+          latitude: { N: String(p.latitude) },
+          longitude: { N: String(p.longitude) },
+        })),
       };
-      
-      console.log('Updating mission:', updatedMission.droneId, updateData);
-      
-      const result = await missionService.updateMission(updatedMission.droneId, updateData);
-      console.log('Mission updated successfully:', result);
-      
-      // Refresh the list
+      const result = await missionService.updateMission(updatedMission.missionId, payload);
+      console.log('Updated mission:', result);
       await fetchAllMissions();
-      
       setIsViewModalOpen(false);
-      setSelectedMission(null);
-      alert('Mission updated successfully!');
+      alert('Mission updated!');
     } catch (err) {
-      setError((err as Error)?.message || 'Failed to update mission');
-      console.error('Error updating mission:', err);
+      setError((err as Error).message);
     } finally {
       setLoading(false);
     }

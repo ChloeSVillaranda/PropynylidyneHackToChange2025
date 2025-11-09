@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-
 import {
   createMission,
   deleteMission,
@@ -48,7 +47,6 @@ export const getMission = async (req: Request, res: Response) => {
   res.json({ data: mission });
 };
 
-// Create mission handler: more tolerant validation + logging
 export const createMissionHandler = async (req: Request, res: Response) => {
   const payload = req.body;
   const ts = new Date().toISOString();
@@ -106,11 +104,12 @@ export const createMissionHandler = async (req: Request, res: Response) => {
     console.log(`[${ts}] createMissionHandler - created mission for droneId=${payload.droneId}`);
     res.status(201).json({ data: saved });
   } catch (error) {
-    console.error(`[${ts}] createMissionHandler - error:`, error);
+    console.error('[createMissionHandler] Error:', error);
     if ((error as Error).name === "ConditionalCheckFailedException") {
-      res.status(409).json({ message: `Mission for ${payload.droneId} already exists` });
+      res.status(409).json({ message: `Mission conflict (rare UUID collision)` });
       return;
     }
+
     res.status(500).json({ message: "Failed to create mission" });
   }
 };
@@ -164,24 +163,15 @@ export const updateMissionHandler = async (req: Request, res: Response) => {
     console.log(`[${ts}] updateMissionHandler - successfully updated mission id=${missionId}`);
     res.json({ data: updated });
   } catch (error) {
-    // Print full error and stack for debugging
-    console.error(`[${ts}] updateMissionHandler - Error:`, error);
-    if ((error as any)?.stack) {
-      console.error((error as any).stack);
-    }
-
-    // Preserve previous behavior for specific errors
     if ((error as Error).message === "No fields provided to update") {
       res.status(400).json({ message: "Provide at least one field to update" });
       return;
     }
-    if ((error as any)?.name === "ConditionalCheckFailedException") {
+    if ((error as Error).name === "ConditionalCheckFailedException") {
       res.status(404).json({ message: `Mission ${id} not found` });
       return;
     }
-
-    // Return error message to client (helpful for debugging)
-    res.status(500).json({ message: (error as Error).message || "Failed to update mission" });
+    res.status(500).json({ message: "Failed to update mission" });
   }
 };
 

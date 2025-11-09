@@ -1,5 +1,3 @@
-export type EntityType = "DRONE" | "MISSION";
-
 export type DroneStatus = "Available" | "Busy" | "Maintenance";
 
 export type GeoPoint = {
@@ -16,14 +14,13 @@ export type PatrolSchedule = {
 export type DroneMetadata = Record<string, string | number | boolean | null | undefined>;
 
 export type BaseEntity = {
-  entityType: EntityType;
   droneId: string;
 };
 
 export type Drone = BaseEntity & {
-  entityType: "DRONE";
   model: string;
   status: DroneStatus;
+  description?: string;
   currentLocation?: GeoPoint;
   patrolSchedule?: PatrolSchedule;
   lastImageTimestamp?: string;
