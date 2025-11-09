@@ -16,7 +16,6 @@ import LoginIcon from "@mui/icons-material/Login";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { useColorMode } from "../theme";
 import "../index.css";
-import { Typography } from "@mui/material";
 
 interface HeaderProps {
   isLoggedIn?: boolean;
@@ -57,9 +56,21 @@ export default function Header({ isLoggedIn, setIsLoggedIn }: HeaderProps) {
       <Toolbar sx={{ display: "flex", justifyContent: "space-between", gap: 2 }}>
         {/* Left: logo + title */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 2, cursor: "pointer" }} onClick={go("/")}>
-          <Typography variant="h6" component="div" sx={{ fontWeight: 600 }}>
-            Drone The Change
-          </Typography>
+          <img
+            src="/drone-the-change.png"
+            alt="Drone The Change"
+            style={{
+              height: "60px",
+              width: "auto",
+              objectFit: "contain",
+              filter: muiTheme.palette.mode === "dark" ? "brightness(1)" : "brightness(0.9)",
+              transition: "filter 0.3s ease",
+            }}
+            onError={(e) => {
+              console.error("Failed to load logo");
+              e.currentTarget.style.display = "none";
+            }}
+          />
         </Box>
 
         {/* Center / Right: nav icons, theme toggle, login */}
