@@ -8,6 +8,7 @@ import Tooltip from "@mui/material/Tooltip";
 import { useTheme } from "@mui/material/styles";
 import HomeIcon from "@mui/icons-material/Home";
 import MapIcon from "@mui/icons-material/Map";
+import FlightTakeoffIcon from "@mui/icons-material/FlightTakeoff";
 import ListAltIcon from "@mui/icons-material/ListAlt";
 import SettingsIcon from "@mui/icons-material/Settings";
 import Brightness4Icon from "@mui/icons-material/Brightness4";
@@ -16,10 +17,13 @@ import LoginIcon from "@mui/icons-material/Login";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { useColorMode } from "../theme";
 import "../index.css";
+import { UserRole } from "../types";
 
 interface HeaderProps {
   isLoggedIn?: boolean;
   setIsLoggedIn?: React.Dispatch<React.SetStateAction<boolean>>;
+  userRole?: UserRole | null;
+  setUserRole?: React.Dispatch<React.SetStateAction<UserRole | null>>;
 }
 
 const NavButton: React.FC<{ title: string; onClick?: () => void; children?: React.ReactNode }> = ({ title, onClick, children }) => (
@@ -30,7 +34,7 @@ const NavButton: React.FC<{ title: string; onClick?: () => void; children?: Reac
   </Tooltip>
 );
 
-export default function Header({ isLoggedIn, setIsLoggedIn }: HeaderProps) {
+export default function Header({ isLoggedIn, setIsLoggedIn, userRole, setUserRole }: HeaderProps) {
   const navigate = useNavigate();
   const muiTheme = useTheme();
   const colorMode = useColorMode();
@@ -45,6 +49,7 @@ export default function Header({ isLoggedIn, setIsLoggedIn }: HeaderProps) {
         // ignore
       }
       if (typeof setIsLoggedIn === "function") setIsLoggedIn(false);
+      if (typeof setUserRole === "function") setUserRole(null);
       navigate("/login");
     } else {
       navigate("/login");
@@ -75,15 +80,19 @@ export default function Header({ isLoggedIn, setIsLoggedIn }: HeaderProps) {
 
         {/* Center / Right: nav icons, theme toggle, login */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          {/* show nav only when logged in */}
-          {isLoggedIn && (
-            <>
-              <NavButton title="Dashboard" onClick={go("/")}>
-                <HomeIcon />
-              </NavButton>
+          <NavButton title="Dashboard" onClick={go("/")}>
+            <HomeIcon />
+          </NavButton>
 
-              <NavButton title="View Drones" onClick={go("/view-drones")}>
-                <MapIcon />
+          <NavButton title="View Drones" onClick={go("/view-drones")}>
+            <MapIcon />
+          </NavButton>
+
+          {/* show admin nav when logged in as admin */}
+          {isLoggedIn && userRole === "admin" && (
+            <>
+              <NavButton title="Manage Drones" onClick={go("/manage-drones")}>
+                <FlightTakeoffIcon />
               </NavButton>
 
               <NavButton title="Manage Missions" onClick={go("/manage-missions")}>

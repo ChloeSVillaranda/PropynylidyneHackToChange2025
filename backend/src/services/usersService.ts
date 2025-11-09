@@ -104,3 +104,23 @@ export const deleteUser = async (email: string): Promise<void> => {
   await documentClient.send(command);
 };
 
+export const updateUserLastLogin = async (email: string): Promise<void> => {
+  const command = new UpdateCommand({
+    TableName: USERS_TABLE,
+    Key: {
+      email: normalizeEmail(email)
+    },
+    ConditionExpression: "attribute_exists(email)",
+    UpdateExpression: "SET #lastLoginAt = :lastLoginAt",
+    ExpressionAttributeNames: {
+      "#lastLoginAt": "lastLoginAt"
+    },
+    ExpressionAttributeValues: {
+      ":lastLoginAt": new Date().toISOString()
+    }
+  });
+
+  await documentClient.send(command);
+};
+
+

@@ -1,20 +1,19 @@
 export interface LoginRequest {
-  username: string;
+  email: string;
   password: string;
 }
 
-export interface LoginResponse {
-  success: boolean;
-  token: string;
-  user: User;
-  message?: string;
-}
+export type UserRole = 'admin' | 'user';
 
-export interface User {
-  id: string;
-  username: string;
+export interface LoginUser {
   email: string;
   role: UserRole;
 }
 
-export type UserRole = 'admin' | 'operator' | 'viewer';
+export interface LoginResponse {
+  token: string;
+  role: UserRole;
+  expiresIn?: string | number;
+  user: LoginUser;
+  message?: string;
+}

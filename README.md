@@ -33,6 +33,10 @@ The backend is written in Typescript and uses Node.js to create APIs.
 - API now validates drone existence and maintenance status before assigning missions and blocks overlapping schedules for the same drone.
 - Mission payloads can include a `routeSuggestions` to-do list (`summary`, optional `status`, `suggestedRoute`, and `notes`) so planners can curate route options alongside the canonical mission route.
 
+### Authentication
+- Admins are stored in DynamoDB with hashed passwords; `POST /auth/login` issues a session token backed by the `sessions` table (controlled by `SESSION_TTL_SECONDS`).
+- Mission and drone mutation endpoints require a valid admin session token; observers without a token can still view drone locations and mission summaries.
+
 ## Architecture
 
 ## Database

@@ -4,6 +4,7 @@ import express from "express";
 import swaggerUi from "swagger-ui-express";
 
 import { swaggerSpec } from "./docs/swagger.js";
+import authRouter from "./routes/authRoutes.js";
 import dronesRouter from "./routes/dronesRoutes.js";
 import missionsRouter from "./routes/missionsRoutes.js";
 import usersRouter from "./routes/usersRoutes.js";
@@ -47,6 +48,7 @@ app.get("/health", (_req, res) => {
   res.json({ status: "ok", service: "backend", timestamp: new Date().toISOString() });
 });
 
+app.use("/auth", authRouter);
 app.use("/drones", dronesRouter);
 app.use("/missions", missionsRouter);
 app.use("/users", usersRouter);
