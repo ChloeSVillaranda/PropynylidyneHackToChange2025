@@ -1,3 +1,5 @@
+import { RoutePoint } from "./mission.js";
+
 export type DroneStatus = "Available" | "Busy" | "Maintenance";
 
 export type GeoPoint = {
