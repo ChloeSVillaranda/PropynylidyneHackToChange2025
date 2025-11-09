@@ -3,8 +3,8 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Install dependencies
-COPY package*.json ./
+# Install dependencies (tsconfig needed for build)
+COPY package*.json tsconfig.json ./
 RUN npm install
 
 # Copy all source files
