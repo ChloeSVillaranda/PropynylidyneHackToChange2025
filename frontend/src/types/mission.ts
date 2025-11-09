@@ -12,7 +12,7 @@ export interface RoutePoint {
   longitude: number;
 }
 
-export type MissionType = 'Patrol' | 'Emergency' | 'Delivery' | 'Survey' | 'Inspection';
+export type MissionType = 'Patrol' | 'Emergency' | 'Data Collection';
 
 export type MissionStatus = 'pending' | 'active' | 'completed' | 'cancelled' | 'in-progress';
 

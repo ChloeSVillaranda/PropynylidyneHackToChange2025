@@ -132,9 +132,7 @@ function CreateMissionModal({ onClose, onCreate, loading }: CreateMissionModalPr
             >
               <option value="Patrol">Patrol</option>
               <option value="Emergency">Emergency</option>
-              <option value="Delivery">Delivery</option>
-              <option value="Survey">Survey</option>
-              <option value="Inspection">Inspection</option>
+              <option value="Data Collection">Data Collection</option>
             </select>
           </div>
 
