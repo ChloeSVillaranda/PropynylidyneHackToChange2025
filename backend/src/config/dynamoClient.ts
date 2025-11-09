@@ -27,4 +27,5 @@ export const DRONES_TABLE = process.env.DRONES_TABLE ?? "drones";
 export const MISSIONS_TABLE = process.env.MISSIONS_TABLE ?? "missions";
 export const USERS_TABLE = process.env.USERS_TABLE ?? "users";
 export const CAMERA_IMAGES_TABLE = process.env.CAMERA_IMAGES_TABLE ?? "cameraImages";
+export const CHAT_TABLE = process.env.CHAT_TABLE ?? "chat";
 
