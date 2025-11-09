@@ -8,6 +8,7 @@ import dronesRouter from "./routes/dronesRoutes.js";
 import missionsRouter from "./routes/missionsRoutes.js";
 import usersRouter from "./routes/usersRoutes.js";
 import camerasRouter from "./routes/camerasRoutes.js";
+import chatRouter from "./routes/chatRoutes.js";
 import authRouter from "./routes/auth.js";  // Keep .js for the compiled output
 
 dotenv.config();
@@ -55,6 +56,7 @@ app.use("/drones", dronesRouter);
 app.use("/missions", missionsRouter);
 app.use("/users", usersRouter);
 app.use("/cameras", camerasRouter);
+app.use("/chat", chatRouter);
 
 const port = process.env.PORT ? Number(process.env.PORT) : 4000;
 
