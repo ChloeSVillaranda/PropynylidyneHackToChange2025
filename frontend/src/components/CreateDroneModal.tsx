@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CreateDroneRequest, DroneStatus } from '../types';
+import { CreateDroneRequest } from '../types';
 
 interface CreateDroneModalProps {
   onClose: () => void;
