@@ -1,4 +1,5 @@
 import { Box, Button, Container, Grid, Paper, Typography, useTheme } from "@mui/material";
+import { motion } from 'framer-motion';
 
 interface DronesSectionProps {
   onShowModal: () => void;
@@ -15,48 +16,55 @@ const DroneCard = ({ title, description, color = "#0f1724" }: DroneCardProps) =>
   const isDark = theme.palette.mode === 'dark';
 
   return (
-    <Paper elevation={0} sx={{
-      p: 4,
-      height: "100%",
-      background: isDark
-        ? 'linear-gradient(135deg, rgba(30,30,30,0.95) 0%, rgba(20,20,20,0.95) 100%)'
-        : 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
-      borderRadius: 3,
-      transition: 'all 0.3s ease',
-      border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'}`,
-      '&:hover': {
-        transform: 'translateY(-5px)',
-        boxShadow: isDark
-          ? '0 12px 30px rgba(0,0,0,0.4)'
-          : '0 12px 30px rgba(0,0,0,0.1)',
-        border: `1px solid ${isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}`,
-      }
-    }}>
-      <Typography 
-        variant="h6" 
-        gutterBottom 
-        sx={{ 
-          color,
-          fontWeight: 600,
-          position: 'relative',
-          '&::after': {
-            content: '""',
-            position: 'absolute',
-            bottom: -1,
-            left: 0,
-            width: '40px',
-            height: '2px',
-            background: color,
-            borderRadius: '2px'
-          }
-        }}
-      >
-        {title}
-      </Typography>
-      <Typography variant="body2" sx={{ color: 'text.secondary', lineHeight: 1.7 }}>
-        {description}
-      </Typography>
-    </Paper>
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      whileInView={{ opacity: 1, scale: 1 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.5 }}
+    >
+      <Paper elevation={0} sx={{
+        p: 4,
+        height: "100%",
+        background: isDark
+          ? 'linear-gradient(135deg, rgba(30,30,30,0.95) 0%, rgba(20,20,20,0.95) 100%)'
+          : 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+        borderRadius: 3,
+        transition: 'all 0.3s ease',
+        border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'}`,
+        '&:hover': {
+          transform: 'translateY(-5px)',
+          boxShadow: isDark
+            ? '0 12px 30px rgba(0,0,0,0.4)'
+            : '0 12px 30px rgba(0,0,0,0.1)',
+          border: `1px solid ${isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}`,
+        }
+      }}>
+        <Typography 
+          variant="h6" 
+          gutterBottom 
+          sx={{ 
+            color,
+            fontWeight: 600,
+            position: 'relative',
+            '&::after': {
+              content: '""',
+              position: 'absolute',
+              bottom: -1,
+              left: 0,
+              width: '40px',
+              height: '2px',
+              background: color,
+              borderRadius: '2px'
+            }
+          }}
+        >
+          {title}
+        </Typography>
+        <Typography variant="body2" sx={{ color: 'text.secondary', lineHeight: 1.7 }}>
+          {description}
+        </Typography>
+      </Paper>
+    </motion.div>
   );
 };
 
@@ -74,22 +82,33 @@ export default function DronesSection({ onShowModal }: DronesSectionProps) {
       borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'}`
     }}>
       <Container maxWidth="lg">
-        <Typography 
-          variant="h3" 
-          component="h2" 
-          gutterBottom 
-          align="center" 
-          sx={{
-            fontWeight: 800,
-            background: 'linear-gradient(to right, #1e40af, #3b82f6)',
-            backgroundClip: 'text',
-            WebkitBackgroundClip: 'text',
-            color: 'transparent',
-            mb: 3
-          }}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
         >
-          Our Drones
-        </Typography>
+          <Typography
+            variant="h2"
+            component="h2"
+            gutterBottom
+            align="center"
+            sx={{
+              fontWeight: 900,
+              fontSize: { xs: '3rem', md: '4.5rem' },
+              fontFamily: '"Poppins", sans-serif',
+              background: 'linear-gradient(to right, #0f2447, #3b82f6)',
+              backgroundClip: 'text',
+              WebkitBackgroundClip: 'text',
+              color: 'transparent',
+              textShadow: '0 4px 15px rgba(59,130,246,0.4)',
+              mb: 4,
+              letterSpacing: '-0.02em'
+            }}
+          >
+            Our Drones
+          </Typography>
+        </motion.div>
         <Typography variant="body1" align="center" paragraph sx={{ mb: 6 }}>
           Our drone fleet addresses key urban challenges. From monitoring public safety and infrastructure to tracking environmental impact, each drone is designed to improve the quality of life in cities, ensuring inclusivity, sustainability, and resilience.
         </Typography>
