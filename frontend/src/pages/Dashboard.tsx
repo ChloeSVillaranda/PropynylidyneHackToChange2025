@@ -47,57 +47,52 @@ function Dashboard() {
             </section>
 
             {showModal && (
-                <div className='fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50'>
-                    <div className='bg-white rounded-2xl shadow-lg max-w-lg w-full p-6 relative'>
-                        <h3 className='text-xl font-semibold mb-4 text-gray-800'>
-                            Types of Drones
-                        </h3>
+                <Modal onClose={() => setShowModal(false)}>
+                    <h3 className='text-xl font-semibold mb-4 text-gray-800'>
+                        Types of Drones
+                    </h3>
 
-                        <ul className='text-gray-700 text-left space-y-3'>
-                            <li>
-                                <span className='font-semibold text-blue-600'>
-                                    Drones 1:
-                                </span>{' '}
-                                Lorem ipsum dolor sit amet, consectetur
-                                adipiscing elit. Sed do eiusmod tempor
-                                incididunt ut labore et dolore magna aliqua. Ut
-                                enim ad minim veniam, quis nostrud exercitation
-                                ullamco laboris nisi ut aliquip ex ea commodo
-                                consequat.
-                            </li>
-                            <li>
-                                <span className='font-semibold text-green-600'>
-                                    Drones 2:
-                                </span>{' '}
-                                Lorem ipsum dolor sit amet, consectetur
-                                adipiscing elit. Sed do eiusmod tempor
-                                incididunt ut labore et dolore magna aliqua. Ut
-                                enim ad minim veniam, quis nostrud exercitation
-                                ullamco laboris nisi ut aliquip ex ea commodo
-                                consequat.
-                            </li>
-                            <li>
-                                <span className='font-semibold text-orange-600'>
-                                    Drones 3:
-                                </span>{' '}
-                                Lorem ipsum dolor sit amet, consectetur
-                                adipiscing elit. Sed do eiusmod tempor
-                                incididunt ut labore et dolore magna aliqua. Ut
-                                enim ad minim veniam, quis nostrud exercitation
-                                ullamco laboris nisi ut aliquip ex ea commodo
-                                consequat.
-                            </li>
-                        </ul>
+                    <ul className='text-gray-700 text-left space-y-3'>
+                        <li>
+                            <span className='font-semibold text-blue-600'>
+                                Drone 1:
+                            </span>{' '}
+                            Lorem ipsum dolor sit amet, consectetur adipiscing
+                            elit. Sed do eiusmod tempor incididunt ut labore et
+                            dolore magna aliqua. Ut enim ad minim veniam, quis
+                            nostrud exercitation ullamco laboris nisi ut aliquip
+                            ex ea commodo consequat.
+                        </li>
+                        <li>
+                            <span className='font-semibold text-green-600'>
+                                Drone 2:
+                            </span>{' '}
+                            Lorem ipsum dolor sit amet, consectetur adipiscing
+                            elit. Sed do eiusmod tempor incididunt ut labore et
+                            dolore magna aliqua. Ut enim ad minim veniam, quis
+                            nostrud exercitation ullamco laboris nisi ut aliquip
+                            ex ea commodo consequat.
+                        </li>
+                        <li>
+                            <span className='font-semibold text-orange-600'>
+                                Drone 3:
+                            </span>{' '}
+                            Lorem ipsum dolor sit amet, consectetur adipiscing
+                            elit. Sed do eiusmod tempor incididunt ut labore et
+                            dolore magna aliqua. Ut enim ad minim veniam, quis
+                            nostrud exercitation ullamco laboris nisi ut aliquip
+                            ex ea commodo consequat.
+                        </li>
+                    </ul>
 
-                        <div className='mt-6 text-right'>
-                            <Button
-                                onClick={() => setShowModal(false)}
-                                className='bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded-lg'>
-                                Close
-                            </Button>
-                        </div>
+                    <div className='mt-6 text-right'>
+                        <button
+                            onClick={() => setShowModal(false)}
+                            className='bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded-lg'>
+                            Close
+                        </button>
                     </div>
-                </div>
+                </Modal>
             )}
         </>
     );
