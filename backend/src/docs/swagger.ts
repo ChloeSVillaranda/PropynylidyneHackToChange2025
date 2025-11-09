@@ -103,6 +103,46 @@ const options: OAS3Options = {
             }
           }
         },
+        CalgaryCameraView: {
+          type: "object",
+          properties: {
+            id: { type: "integer", example: 123 },
+            url: {
+              type: "string",
+              example: "https://511.alberta.ca/map/Cctv/123"
+            },
+            description: { type: "string", example: "NB Deerfoot Tr at Memorial Dr" },
+            status: { type: "string", example: "Enabled" }
+          }
+        },
+        CalgaryCamera: {
+          type: "object",
+          properties: {
+            id: { type: "integer" },
+            source: { type: "string" },
+            sourceId: { type: "string" },
+            roadway: { type: "string" },
+            direction: { type: "string" },
+            latitude: { type: "number" },
+            longitude: { type: "number" },
+            location: { type: "string" },
+            sortOrder: { type: "integer" },
+            views: {
+              type: "array",
+              items: { $ref: "#/components/schemas/CalgaryCameraView" }
+            }
+          }
+        },
+        CameraSyncResult: {
+          type: "object",
+          properties: {
+            cameraId: { type: "integer" },
+            viewId: { type: "integer" },
+            success: { type: "boolean" },
+            s3Key: { type: "string" },
+            error: { type: "string" }
+          }
+        },
         Drone: {
           type: "object",
           required: ["entityType", "droneId", "model", "status"],
@@ -304,7 +344,8 @@ const options: OAS3Options = {
       { name: "Drones" },
       { name: "Drone Images" },
       { name: "Missions" },
-      { name: "Users" }
+      { name: "Users" },
+      { name: "Cameras" }
     ],
     paths: {
       "/health": {
@@ -314,6 +355,58 @@ const options: OAS3Options = {
           responses: {
             "200": {
               description: "Service is running"
+            }
+          }
+        }
+      },
+      "/cameras/calgary": {
+        get: {
+          tags: ["Cameras"],
+          summary: "List Calgary traffic cameras",
+          responses: {
+            "200": {
+              description: "Calgary camera metadata",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      count: { type: "integer" },
+                      data: {
+                        type: "array",
+                        items: { $ref: "#/components/schemas/CalgaryCamera" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/cameras/calgary/sync": {
+        post: {
+          tags: ["Cameras"],
+          summary: "Fetch Calgary camera imagery and store in S3",
+          responses: {
+            "200": {
+              description: "Sync results",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      processed: { type: "integer" },
+                      successes: { type: "integer" },
+                      failures: { type: "integer" },
+                      results: {
+                        type: "array",
+                        items: { $ref: "#/components/schemas/CameraSyncResult" }
+                      }
+                    }
+                  }
+                }
+              }
             }
           }
         }
