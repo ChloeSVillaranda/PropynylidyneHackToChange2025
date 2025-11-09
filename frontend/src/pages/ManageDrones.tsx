@@ -1,10 +1,18 @@
 import { useState, useEffect } from 'react';
+import { Box, Card, Typography, IconButton, Chip, useTheme } from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import BatteryFullIcon from '@mui/icons-material/BatteryFull';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
 import { droneService } from '../api';
 import { Drone } from '../types';
 import DroneModal from '../components/DroneModal';
 import CreateDroneModal from '../components/CreateDroneModal';
 
 function ManageDrones() {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+  
   const [drones, setDrones] = useState<Drone[]>([]);
   const [selectedDrone, setSelectedDrone] = useState<Drone | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
@@ -123,19 +131,148 @@ function ManageDrones() {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Available': return '#4CAF50';
-      case 'Busy': return '#FF9800';
-      case 'Maintenance': return '#f44336';
-      default: return '#9e9e9e';
-    }
+  const renderDroneCard = (drone: Drone) => {
+    const statusColors = {
+      Available: { background: "#4CAF50", color: "white" },
+      Busy: { background: "#FF9800", color: "white" },
+      Maintenance: { background: "#f44336", color: "white" }
+    };
+
+    const colorStyles = statusColors[drone.status as keyof typeof statusColors] ?? {
+      background: "#9e9e9e",
+      color: "white"
+    };
+
+    return (
+      <Card
+        key={drone.droneId}
+        sx={{
+          p: 3,
+          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
+          background: isDark 
+            ? 'linear-gradient(145deg, rgba(30,41,59,0.7), rgba(15,23,42,0.8))'
+            : 'linear-gradient(145deg, #ffffff, #f8fafc)',
+          border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'}`,
+          borderRadius: 2,
+          transition: 'transform 0.2s, box-shadow 0.2s',
+          '&:hover': {
+            transform: 'translateY(-2px)',
+            boxShadow: isDark 
+              ? '0 8px 25px rgba(0,0,0,0.4)'
+              : '0 8px 25px rgba(0,0,0,0.1)'
+          }
+        }}
+      >
+        {/* Action Icons */}
+        <Box sx={{ position: 'absolute', top: 12, right: 12, display: 'flex', gap: 0.5 }}>
+          <IconButton
+            onClick={() => handleViewDrone(drone)}
+            size="small"
+            sx={{
+              color: isDark ? '#60a5fa' : '#3b82f6',
+              '&:hover': { bgcolor: isDark ? 'rgba(96,165,250,0.1)' : 'rgba(59,130,246,0.1)' }
+            }}
+          >
+            <EditIcon fontSize="small" />
+          </IconButton>
+          <IconButton
+            onClick={() => handleDeleteDrone(drone.droneId)}
+            size="small"
+            disabled={loading}
+            sx={{
+              color: isDark ? '#f87171' : '#ef4444',
+              '&:hover': { bgcolor: isDark ? 'rgba(248,113,113,0.1)' : 'rgba(239,68,68,0.1)' }
+            }}
+          >
+            <DeleteIcon fontSize="small" />
+          </IconButton>
+        </Box>
+
+        {/* Drone Header */}
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="h6" sx={{ 
+            color: isDark ? 'white' : '#1e293b', 
+            fontWeight: 700,
+            mb: 0.5
+          }}>
+            {drone.model}
+          </Typography>
+          <Typography 
+            variant="caption" 
+            sx={{ 
+              color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
+              fontSize: '0.875rem'
+            }}
+          >
+            ID: {drone.droneId}
+          </Typography>
+        </Box>
+
+        {/* Drone Details */}
+        <Box sx={{ flex: 1, mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+            <BatteryFullIcon sx={{ color: isDark ? '#94a3b8' : '#475569' }} />
+            <Typography variant="body2" sx={{ color: isDark ? '#94a3b8' : '#475569' }}>
+              Battery: {drone.metadata?.batteryLevel ?? 0}%
+            </Typography>
+          </Box>
+          {drone.currentLocation && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <LocationOnIcon sx={{ color: isDark ? '#94a3b8' : '#475569' }} />
+              <Typography variant="body2" sx={{ color: isDark ? '#94a3b8' : '#475569' }}>
+                {drone.currentLocation.latitude.toFixed(4)}, {drone.currentLocation.longitude.toFixed(4)}
+              </Typography>
+            </Box>
+          )}
+        </Box>
+
+        {/* Drone Status */}
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'flex-end', 
+          mt: 'auto', 
+          pt: 2,
+          borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'}`
+        }}>
+          <Chip
+            label={drone.status}
+            size="small"
+            sx={{
+              bgcolor: colorStyles.background,
+              color: colorStyles.color,
+              fontWeight: 600,
+              fontSize: '0.75rem',
+              height: '24px'
+            }}
+          />
+        </Box>
+      </Card>
+    );
   };
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <h2>Manage Drones</h2>
-      
+    <Box sx={{ p: 4 }}>
+      <Box sx={{ mb: 4 }}>
+        <Typography 
+          variant="overline" 
+          sx={{ 
+            color: '#9e9e9e',
+            letterSpacing: '0.2rem',
+            display: 'block',
+            mb: 1
+          }}
+        >
+          Operations
+        </Typography>
+        <Typography variant="h4" sx={{ mb: 1 }}>Manage Drones</Typography>
+        <Typography variant="body1" sx={{ color: '#666' }}>
+          Review, create, and update drone fleet.
+        </Typography>
+      </Box>
+
       {error && (
         <div style={{ padding: '1rem', backgroundColor: '#ffebee', color: '#c62828', marginBottom: '1rem', borderRadius: '4px' }}>
           {error}
@@ -165,78 +302,9 @@ function ManageDrones() {
       ) : drones.length === 0 ? (
         <p style={{ color: '#666' }}>No drones available. Click "Create New Drone" to add one.</p>
       ) : (
-        <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
-          {drones.map((drone) => (
-            <div 
-              key={drone.droneId}
-              style={{ 
-                border: '1px solid #ddd', 
-                borderRadius: '8px', 
-                padding: '1rem',
-                backgroundColor: '#f9f9f9'
-              }}
-            >
-              <h4 style={{ margin: '0 0 0.5rem 0' }}>{drone.droneId}</h4>
-              <p style={{ margin: '0.25rem 0', fontSize: '0.9rem', color: '#666' }}>
-                <strong>Model:</strong> {drone.model}
-              </p>
-              <p style={{ margin: '0.25rem 0', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <strong>Status:</strong> 
-                <span style={{ 
-                  display: 'inline-block',
-                  padding: '0.2rem 0.5rem',
-                  borderRadius: '4px',
-                  backgroundColor: getStatusColor(drone.status),
-                  color: 'white',
-                  fontSize: '0.8rem'
-                }}>
-                  {drone.status}
-                </span>
-              </p>
-              {drone.metadata && (
-                <p style={{ margin: '0.25rem 0', fontSize: '0.9rem', color: '#666' }}>
-                  <strong>Battery:</strong> {drone.metadata.batteryLevel}%
-                </p>
-              )}
-              {drone.currentLocation && (
-                <p style={{ margin: '0.25rem 0', fontSize: '0.9rem', color: '#666' }}>
-                  <strong>Location:</strong> {drone.currentLocation.latitude.toFixed(4)}, {drone.currentLocation.longitude.toFixed(4)}
-                </p>
-              )}
-              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-                <button
-                  onClick={() => handleViewDrone(drone)}
-                  style={{ 
-                    flex: 1,
-                    padding: '0.5rem 1rem', 
-                    backgroundColor: '#2196F3', 
-                    color: 'white', 
-                    border: 'none', 
-                    borderRadius: '4px', 
-                    cursor: 'pointer'
-                  }}
-                >
-                  View & Edit
-                </button>
-                <button
-                  onClick={() => handleDeleteDrone(drone.droneId)}
-                  disabled={loading}
-                  style={{ 
-                    padding: '0.5rem 1rem', 
-                    backgroundColor: '#f44336', 
-                    color: 'white', 
-                    border: 'none', 
-                    borderRadius: '4px', 
-                    cursor: loading ? 'not-allowed' : 'pointer',
-                    opacity: loading ? 0.6 : 1
-                  }}
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+        <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
+          {drones.map(renderDroneCard)}
+        </Box>
       )}
 
       {isCreateModalOpen && (
@@ -258,7 +326,7 @@ function ManageDrones() {
           loading={loading}
         />
       )}
-    </div>
+    </Box>
   );
 }
 

@@ -18,6 +18,8 @@ import DroneIcon from "@mui/icons-material/PropaneTank";
 import { useColorMode } from "../theme";
 import "../index.css";
 import { SxProps, Theme } from "@mui/material/styles";
+import Typography from "@mui/material/Typography";
+import PersonIcon from "@mui/icons-material/Person";
 
 interface HeaderProps {
   isLoggedIn?: boolean;
@@ -33,7 +35,15 @@ interface NavButtonProps {
 
 const NavButton: React.FC<NavButtonProps> = ({ title, onClick, children, sx }) => (
   <Tooltip title={title}>
-    <IconButton color="inherit" onClick={onClick} size="large" sx={{ ml: 1, ...sx }}>
+    <IconButton
+      color="inherit"
+      onClick={onClick}
+      size="medium"
+      sx={{
+        mx: 0.5, // Reduced margin
+        ...sx
+      }}
+    >
       {children}
     </IconButton>
   </Tooltip>
@@ -60,6 +70,8 @@ export default function Header({ isLoggedIn, setIsLoggedIn }: HeaderProps) {
     }
   };
 
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+
   const iconStyle = {
     color: '#1e40af',
     "&:hover": {
@@ -81,9 +93,9 @@ export default function Header({ isLoggedIn, setIsLoggedIn }: HeaderProps) {
             : "0 4px 20px rgba(0,0,0,0.1)",
       }}
     >
-      <Toolbar sx={{ display: "flex", justifyContent: "space-between", gap: 2 }}>
-        {/* Left: logo + title */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2, cursor: "pointer" }} onClick={go("/")}>
+      <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
+        {/* Logo - Left side */}
+        <Box sx={{ display: "flex", alignItems: "center" }} onClick={go("/")}>
           <img
             src={muiTheme.palette.mode === "dark" ? "/drone-the-change-dark.png" : "/drone-the-change.png"}
             alt="Drone The Change"
@@ -100,19 +112,20 @@ export default function Header({ isLoggedIn, setIsLoggedIn }: HeaderProps) {
           />
         </Box>
 
-        {/* Center / Right: nav icons, theme toggle, login */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          {/* show nav only when logged in */}
+        {/* Navigation - Right side */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+          <NavButton title="Dashboard" onClick={go("/")} sx={iconStyle}>
+            <HomeIcon />
+          </NavButton>
+
+          {/* View Drones available to all */}
+          <NavButton title="View Drones" onClick={go("/view-drones")} sx={iconStyle}>
+            <MapIcon />
+          </NavButton>
+
+          {/* Admin/logged in only features */}
           {isLoggedIn && (
             <>
-              <NavButton title="Dashboard" onClick={go("/")} sx={iconStyle}>
-                <HomeIcon />
-              </NavButton>
-
-              <NavButton title="View Drones" onClick={go("/view-drones")} sx={iconStyle}>
-                <MapIcon />
-              </NavButton>
-
               <NavButton title="Manage Drones" onClick={go("/manage-drones")} sx={iconStyle}>
                 <DroneIcon />
               </NavButton>
@@ -121,13 +134,23 @@ export default function Header({ isLoggedIn, setIsLoggedIn }: HeaderProps) {
                 <ListAltIcon />
               </NavButton>
 
-              <NavButton title="Settings" onClick={go("/settings")} sx={iconStyle}>
-                <SettingsIcon />
-              </NavButton>
+              {/* User greeting */}
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                ml: 2,
+                mr: 1,
+                color: iconStyle.color 
+              }}>
+                <PersonIcon sx={{ mr: 1 }} />
+                <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                  Hello, {user.name || 'User'}
+                </Typography>
+              </Box>
             </>
           )}
 
-          {/* theme toggle with updated colors */}
+          {/* Theme toggle and login/logout */}
           <NavButton
             title={muiTheme.palette.mode === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
             onClick={colorMode.toggleColorMode}

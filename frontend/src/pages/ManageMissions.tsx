@@ -130,28 +130,26 @@ function ManageMissions() {
         sx={{
           p: 3,
           position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+          height: '260px', // Fixed height
+          minWidth: '300px',
           background: isDark 
-            ? 'linear-gradient(145deg, rgba(30,41,59,0.7), rgba(15,23,42,0.8))'
+            ? 'linear-gradient(145deg, rgba(30,41,59,0.9), rgba(15,23,42,0.9))'
             : 'linear-gradient(145deg, #ffffff, #f8fafc)',
-          border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'}`,
-          borderRadius: 2,
+          border: 'none',
+          borderRadius: '16px',
           transition: 'transform 0.2s, box-shadow 0.2s',
           '&:hover': {
             transform: 'translateY(-2px)',
             boxShadow: isDark 
-              ? '0 8px 25px rgba(0,0,0,0.4)'
+              ? '0 8px 25px rgba(0,0,0,0.3)'
               : '0 8px 25px rgba(0,0,0,0.1)'
           }
         }}
       >
-        {/* Action Icons - Now at top right */}
-        <Box sx={{ 
-          position: 'absolute',
-          top: 12,
-          right: 12,
-          display: 'flex',
-          gap: 0.5
-        }}>
+        {/* Action Icons */}
+        <Box sx={{ position: 'absolute', top: 12, right: 12, display: 'flex', gap: 0.5 }}>
           <IconButton
             onClick={() => handleViewMission(mission)}
             size="small"
@@ -176,41 +174,83 @@ function ManageMissions() {
         </Box>
 
         {/* Mission Header */}
-        <Box sx={{ mb: 2 }}>
-          <Typography variant="subtitle2" sx={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }}>
-            Mission #{mission.missionId}
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="h6" sx={{ 
+            color: isDark ? 'white' : '#1e293b', 
+            fontWeight: 700,
+            mb: 0.5
+          }}>
+            {mission.droneId}
           </Typography>
-          <Typography variant="h6" sx={{ color: isDark ? 'white' : '#1e293b', fontWeight: 600 }}>
-            Drone: {mission.droneId}
+          <Typography 
+            variant="caption" 
+            sx={{ 
+              color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
+              fontSize: '0.875rem'
+            }}
+          >
+            Mission #{mission.missionId}
           </Typography>
         </Box>
 
         {/* Mission Details */}
-        <Box sx={{ mb: 3 }}>
+        <Box sx={{ flex: 1, mb: 2 }}>
           {mission.startTime && (
-            <Typography variant="body2" sx={{ color: isDark ? '#94a3b8' : '#475569', mb: 0.5 }}>
-              Start: {new Date(mission.startTime).toLocaleString()}
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+              <Typography variant="body2" sx={{ 
+                color: isDark ? '#94a3b8' : '#475569',
+                fontWeight: 500 
+              }}>
+                Start:
+              </Typography>
+              <Typography variant="body2" sx={{ color: isDark ? '#94a3b8' : '#475569' }}>
+                {new Date(mission.startTime).toLocaleString()}
+              </Typography>
+            </Box>
           )}
           {mission.endTime && (
-            <Typography variant="body2" sx={{ color: isDark ? '#94a3b8' : '#475569', mb: 0.5 }}>
-              End: {new Date(mission.endTime).toLocaleString()}
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+              <Typography variant="body2" sx={{ 
+                color: isDark ? '#94a3b8' : '#475569',
+                fontWeight: 500 
+              }}>
+                End:
+              </Typography>
+              <Typography variant="body2" sx={{ color: isDark ? '#94a3b8' : '#475569' }}>
+                {new Date(mission.endTime).toLocaleString()}
+              </Typography>
+            </Box>
           )}
-          <Typography variant="body2" sx={{ color: isDark ? '#94a3b8' : '#475569' }}>
-            Waypoints: {mission.route?.length ?? 0}
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography variant="body2" sx={{ 
+              color: isDark ? '#94a3b8' : '#475569',
+              fontWeight: 500 
+            }}>
+              Waypoints:
+            </Typography>
+            <Typography variant="body2" sx={{ color: isDark ? '#94a3b8' : '#475569' }}>
+              {mission.route?.length ?? 0}
+            </Typography>
+          </Box>
         </Box>
 
-        {/* Mission Type - Now at bottom */}
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 'auto' }}>
+        {/* Mission Type */}
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'flex-end', 
+          mt: 'auto', 
+          pt: 2,
+          borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'}`
+        }}>
           <Chip
             label={mission.missionType}
             size="small"
             sx={{
               bgcolor: colorStyles.background,
               color: colorStyles.color,
-              fontWeight: 600
+              fontWeight: 600,
+              fontSize: '0.75rem',
+              height: '24px'
             }}
           />
         </Box>
@@ -273,15 +313,16 @@ function ManageMissions() {
       ) : missions.length === 0 ? (
         <p style={{ color: "#666" }}>No missions yet. Create one to start tracking drone activity.</p>
       ) : (
-        <div
-          style={{
-            display: "grid",
-            gap: "1rem",
-            gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-          }}
-        >
+        <Box sx={{ 
+          display: 'grid', 
+          gap: 3,
+          gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+          '& > *': {
+            height: '100%' // Ensure all grid items have same height
+          }
+        }}>
           {missions.map(renderMissionCard)}
-        </div>
+        </Box>
       )}
 
       {isCreateModalOpen && (
