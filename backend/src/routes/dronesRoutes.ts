@@ -8,6 +8,7 @@ import {
 import {
   createDroneHandler,
   getDrone,
+  getDroneDetail,
   getDroneLocation,
   getDrones,
   removeDrone,
@@ -19,10 +20,11 @@ const router = Router();
 
 router.get("/", getDrones);
 router.post("/", createDroneHandler);
+router.get("/:id/detail", getDroneDetail);
 router.get("/:id", getDrone);
 router.put("/:id", updateDroneHandler);
 router.delete("/:id", removeDrone);
-router.patch("/:id/status", setDroneStatus);
+router.patch("/:droneId", updateDroneHandler);
 router.get("/:id/location", getDroneLocation);
 
 router.get("/:id/images", listImages);

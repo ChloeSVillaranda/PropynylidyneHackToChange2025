@@ -22,6 +22,7 @@ import {
   updateDrone,
   updateDroneStatus
 } from "../services/dronesService.js";
+import { listMissionsByDrone } from "../services/missionsService.js";
 import { DroneStatus } from "../models/drone.js";
 
 export const getDrones = async (_req: Request, res: Response) => {
@@ -84,39 +85,36 @@ export const createDroneHandler = async (req: Request, res: Response) => {
   }
 };
 
-export const updateDroneHandler = async (req: Request, res: Response) => {
-  const { id } = req.params;
-  const updates = { ...req.body };
-  delete updates.droneId;
-  delete updates.entityType;
-
-  if (updates.status) {
-    try {
-      updates.status = ensureValidStatus(updates.status);
-    } catch (error) {
-      res.status(400).json({ message: (error as Error).message });
-      return;
-    }
-  }
-
+export const updateDroneHandler = async (req: Request, res: Response): Promise<void> => {
   try {
-    const updated = await updateDrone(id, updates);
-    if (!updated) {
-      res.status(404).json({ message: `Drone ${id} not found` });
+    const { droneId } = req.params;
+    const updates = req.body;
+
+    console.log(`[updateDrone] Attempting to update drone: ${droneId}`);
+    console.log(`[updateDrone] Update data:`, JSON.stringify(updates));
+
+    // Check if drone exists first
+    const existingDrone = await getDroneById(droneId);
+    if (!existingDrone) {
+      console.log(`[updateDrone] Drone not found: ${droneId}`);
+      res.status(404).json({ error: "Drone not found" });
       return;
     }
 
-    res.json({ data: updated });
+    console.log(`[updateDrone] Found existing drone:`, JSON.stringify(existingDrone));
+
+    const updatedDrone = await updateDrone(droneId, updates);
+    
+    console.log(`[updateDrone] Successfully updated drone:`, JSON.stringify(updatedDrone));
+    
+    res.json({ data: updatedDrone });
   } catch (error) {
-    if ((error as Error).message === "No fields provided to update") {
-      res.status(400).json({ message: "Provide at least one field to update" });
-      return;
-    }
+    console.error("[updateDrone] Error:", error);
     if ((error as Error).name === "ConditionalCheckFailedException") {
-      res.status(404).json({ message: `Drone ${id} not found` });
-      return;
+      res.status(404).json({ error: "Drone not found" });
+    } else {
+      res.status(500).json({ error: "Failed to update drone" });
     }
-    res.status(500).json({ message: "Failed to update drone" });
   }
 };
 
@@ -170,6 +168,26 @@ export const getDroneLocation = async (req: Request, res: Response) => {
       currentLocation: drone.currentLocation,
       status: drone.status,
       updatedAt: drone.lastImageTimestamp
+    }
+  });
+};
+
+export const getDroneDetail = async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  const drone = await getDroneById(id);
+
+  if (!drone) {
+    res.status(404).json({ message: `Drone ${id} not found` });
+    return;
+  }
+
+  const missions = await listMissionsByDrone(id);
+
+  res.json({
+    data: {
+      drone,
+      missions
     }
   });
 };

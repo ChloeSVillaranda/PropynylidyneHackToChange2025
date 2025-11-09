@@ -5,6 +5,7 @@ import swaggerUi from "swagger-ui-express";
 
 import { swaggerSpec } from "./docs/swagger.js";
 import dronesRouter from "./routes/dronesRoutes.js";
+import missionsRouter from "./routes/missionsRoutes.js";
 
 dotenv.config();
 
@@ -12,6 +13,32 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+// --- Add request logging middleware ---
+app.use((req, res, next) => {
+  const ts = new Date().toISOString();
+  console.log(`[${ts}] Incoming request: ${req.method} ${req.originalUrl}`);
+  if (req.query && Object.keys(req.query).length) {
+    console.log(`[${ts}] Query:`, req.query);
+  }
+  if (req.body && Object.keys(req.body).length) {
+    // avoid logging huge bodies, stringify for readability
+    try {
+      console.log(`[${ts}] Body:`, JSON.stringify(req.body));
+    } catch {
+      console.log(`[${ts}] Body: (unserializable)`);
+    }
+  }
+
+  res.on("finish", () => {
+    const ts2 = new Date().toISOString();
+    console.log(`[${ts2}] Response: ${req.method} ${req.originalUrl} -> ${res.statusCode}`);
+  });
+
+  next();
+});
+// --- end request logging middleware ---
+
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, { explorer: true }));
 
 app.get("/health", (_req, res) => {
@@ -19,6 +46,7 @@ app.get("/health", (_req, res) => {
 });
 
 app.use("/drones", dronesRouter);
+app.use("/missions", missionsRouter);
 
 const port = process.env.PORT ? Number(process.env.PORT) : 4000;
 
