@@ -11,10 +11,6 @@ import {motion} from 'framer-motion';
 import DroneFleetModal from '../DroneFleetModal';
 import {useState} from 'react';
 
-interface DronesSectionProps {
-    onShowModal: () => void;
-}
-
 interface DroneCardProps {
     title: string;
     description: string;
@@ -84,7 +80,7 @@ const DroneCard = ({title, description, color = '#0f1724'}: DroneCardProps) => {
     );
 };
 
-export default function DronesSection({onShowModal}: DronesSectionProps) {
+export default function DronesSection() {
     const theme = useTheme();
     const isDark = theme.palette.mode === 'dark';
     const [open, setOpen] = useState(false);
