@@ -3,12 +3,13 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Install dependencies (tsconfig needed for build)
-COPY package*.json tsconfig.json ./
-RUN npm install
+# Install dependencies without running postinstall/build (source not copied yet)
+COPY package*.json ./
+RUN npm install --ignore-scripts
 
-# Copy all source files
+# Copy source and configuration then build
 COPY . .
+RUN npm run build
 
 EXPOSE 4000
 
