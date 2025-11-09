@@ -175,29 +175,18 @@ function ManageMissions() {
           </IconButton>
         </Box>
 
-        {/* Mission Info - Adjusted spacing for top icons */}
-        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 2, pr: 8 }}>
-          <Box>
-            <Typography variant="subtitle2" sx={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }}>
-              Mission #{mission.missionId}
-            </Typography>
-            <Typography variant="h6" sx={{ color: isDark ? 'white' : '#1e293b', fontWeight: 600 }}>
-              Drone: {mission.droneId}
-            </Typography>
-          </Box>
-          <Chip
-            label={mission.missionType}
-            size="small"
-            sx={{
-              bgcolor: colorStyles.background,
-              color: colorStyles.color,
-              fontWeight: 600
-            }}
-          />
+        {/* Mission Header */}
+        <Box sx={{ mb: 2 }}>
+          <Typography variant="subtitle2" sx={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }}>
+            Mission #{mission.missionId}
+          </Typography>
+          <Typography variant="h6" sx={{ color: isDark ? 'white' : '#1e293b', fontWeight: 600 }}>
+            Drone: {mission.droneId}
+          </Typography>
         </Box>
 
-        {/* Rest of card content */}
-        <Box sx={{ mb: 2 }}>
+        {/* Mission Details */}
+        <Box sx={{ mb: 3 }}>
           {mission.startTime && (
             <Typography variant="body2" sx={{ color: isDark ? '#94a3b8' : '#475569', mb: 0.5 }}>
               Start: {new Date(mission.startTime).toLocaleString()}
@@ -211,6 +200,19 @@ function ManageMissions() {
           <Typography variant="body2" sx={{ color: isDark ? '#94a3b8' : '#475569' }}>
             Waypoints: {mission.route?.length ?? 0}
           </Typography>
+        </Box>
+
+        {/* Mission Type - Now at bottom */}
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 'auto' }}>
+          <Chip
+            label={mission.missionType}
+            size="small"
+            sx={{
+              bgcolor: colorStyles.background,
+              color: colorStyles.color,
+              fontWeight: 600
+            }}
+          />
         </Box>
       </Card>
     );
