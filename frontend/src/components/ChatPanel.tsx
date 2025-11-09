@@ -9,6 +9,7 @@ import {
   Typography,
   useTheme,
 } from "@mui/material";
+import type { SxProps, Theme } from "@mui/material";
 import { chatService } from "../api";
 import { ChatMessage } from "../types";
 
@@ -25,26 +26,35 @@ interface ChatPanelProps {
 
 const formatTimestamp = (iso: string) => {
   try {
-    return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    return new Date(iso).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   } catch {
     return iso;
   }
 };
 
-export default function ChatPanel({ variant = "default", onClose }: ChatPanelProps) {
+export default function ChatPanel({
+  variant = "default",
+  onClose,
+}: ChatPanelProps) {
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [author, setAuthor] = useState(() => localStorage.getItem(AUTHOR_STORAGE_KEY) ?? "");
+  const [author, setAuthor] = useState(
+    () => localStorage.getItem(AUTHOR_STORAGE_KEY) ?? ""
+  );
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
 
   const listRef = useRef<HTMLDivElement | null>(null);
   const latestMessageTime = useMemo(
-    () => (messages.length ? messages[messages.length - 1].createdAt : undefined),
+    () =>
+      messages.length ? messages[messages.length - 1].createdAt : undefined,
     [messages]
   );
 
@@ -148,57 +158,62 @@ export default function ChatPanel({ variant = "default", onClose }: ChatPanelPro
 
   const isOverlay = variant === "overlay";
 
-  const paperStyles = useMemo(
-    () =>
-      isOverlay
-        ? {
-            p: 2,
-            display: "flex",
-            flexDirection: "column",
-            height: "100%",
-            backdropFilter: "blur(10px)",
-            borderRadius: 2.5,
-            color: theme.palette.getContrastText(isDark ? "#081223" : "#fdfdfd"),
-            background: isDark ? "rgba(15,23,42,0.42)" : "rgba(255,255,255,0.62)",
-            border: `1px solid ${isDark ? "rgba(248,250,252,0.1)" : "rgba(15,23,42,0.08)"}`,
-            boxShadow: "0 18px 36px rgba(15,23,42,0.28)",
-            maxHeight: "70vh",
-            width: "100%",
-          }
-        : {
-            p: 2,
-            height: "100%",
-            display: "flex",
-            flexDirection: "column",
-            background: isDark ? "rgba(20,24,34,0.8)" : "rgba(255,255,255,0.85)",
-            border: `1px solid ${isDark ? "rgba(255,255,255,0.12)" : "rgba(15,23,42,0.1)"}`,
-            borderRadius: 3,
-            backdropFilter: "none",
-          },
+  const paperStyles = useMemo<SxProps<Theme>>(
+    () => ({
+      p: 2,
+      display: "flex",
+      flexDirection: "column",
+      height: "100%",
+      width: "100%",
+      borderRadius: isOverlay ? 2.5 : 3,
+      border: isOverlay
+        ? `1px solid ${
+            isDark ? "rgba(248,250,252,0.1)" : "rgba(15,23,42,0.08)"
+          }`
+        : `1px solid ${
+            isDark ? "rgba(255,255,255,0.12)" : "rgba(15,23,42,0.1)"
+          }`,
+      background: isOverlay
+        ? isDark
+          ? "rgba(15,23,42,0.42)"
+          : "rgba(255,255,255,0.62)"
+        : isDark
+        ? "rgba(20,24,34,0.8)"
+        : "rgba(255,255,255,0.85)",
+      backdropFilter: isOverlay ? "blur(10px)" : "none",
+      color: isOverlay
+        ? theme.palette.getContrastText(isDark ? "#081223" : "#fdfdfd")
+        : theme.palette.text.primary,
+      boxShadow: isOverlay
+        ? "0 18px 36px rgba(15,23,42,0.28)"
+        : theme.shadows[2],
+      maxHeight: isOverlay ? "70vh" : "none",
+    }),
     [isOverlay, isDark, theme.palette]
   );
 
-  const listStyles = useMemo(
-    () =>
-      isOverlay
-        ? {
-            flexGrow: 1,
-            overflowY: "auto",
-            borderRadius: 2,
-            border: `1px solid ${isDark ? "rgba(255,255,255,0.16)" : "rgba(15,23,42,0.12)"}`,
-            p: 1.25,
-            mb: 1.5,
-            background: isDark ? "rgba(8,11,17,0.32)" : "rgba(248,250,252,0.45)",
-          }
-        : {
-            flexGrow: 1,
-            overflowY: "auto",
-            borderRadius: 2,
-            border: `1px solid ${isDark ? "rgba(255,255,255,0.08)" : "rgba(15,23,42,0.08)"}`,
-            p: 1.5,
-            mb: 2,
-            background: isDark ? "rgba(9,12,18,0.8)" : "rgba(248,250,252,0.7)",
-          },
+  const listStyles = useMemo<SxProps<Theme>>(
+    () => ({
+      flexGrow: 1,
+      overflowY: "auto",
+      borderRadius: 2,
+      border: isOverlay
+        ? `1px solid ${
+            isDark ? "rgba(255,255,255,0.16)" : "rgba(15,23,42,0.12)"
+          }`
+        : `1px solid ${
+            isDark ? "rgba(255,255,255,0.08)" : "rgba(15,23,42,0.08)"
+          }`,
+      p: isOverlay ? 1.25 : 1.5,
+      mb: isOverlay ? 1.5 : 2,
+      background: isOverlay
+        ? isDark
+          ? "rgba(8,11,17,0.32)"
+          : "rgba(248,250,252,0.45)"
+        : isDark
+        ? "rgba(9,12,18,0.8)"
+        : "rgba(248,250,252,0.7)",
+    }),
     [isOverlay, isDark]
   );
 
@@ -237,7 +252,8 @@ export default function ChatPanel({ variant = "default", onClose }: ChatPanelPro
         color={isOverlay ? "inherit" : "text.secondary"}
         sx={{ mb: isOverlay ? 1.5 : 2, opacity: isOverlay ? 0.8 : 1 }}
       >
-        Share mission updates or tips with other operators in real-time. No login required.
+        Share mission updates or tips with other operators in real-time. No
+        login required.
       </Typography>
 
       <Box ref={listRef} sx={listStyles}>
@@ -255,7 +271,10 @@ export default function ChatPanel({ variant = "default", onClose }: ChatPanelPro
               <Typography variant="caption" color="text.secondary">
                 {msg.author ?? "Anonymous"} • {formatTimestamp(msg.createdAt)}
               </Typography>
-              <Typography variant="body2" sx={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+              <Typography
+                variant="body2"
+                sx={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}
+              >
                 {msg.text}
               </Typography>
             </Box>
@@ -264,7 +283,11 @@ export default function ChatPanel({ variant = "default", onClose }: ChatPanelPro
       </Box>
 
       {error && (
-        <Typography variant="body2" color="error" sx={{ mb: isOverlay ? 1 : 1 }}>
+        <Typography
+          variant="body2"
+          color="error"
+          sx={{ mb: isOverlay ? 1 : 1 }}
+        >
           {error}
         </Typography>
       )}
@@ -274,7 +297,13 @@ export default function ChatPanel({ variant = "default", onClose }: ChatPanelPro
         onSubmit={handleSend}
         sx={{ display: "flex", gap: 1, flexDirection: "column" }}
       >
-        <Box sx={{ display: "flex", gap: 1, flexDirection: isOverlay ? "column" : "row" }}>
+        <Box
+          sx={{
+            display: "flex",
+            gap: 1,
+            flexDirection: isOverlay ? "column" : "row",
+          }}
+        >
           <TextField
             label="Nickname (optional)"
             value={author}
@@ -295,7 +324,11 @@ export default function ChatPanel({ variant = "default", onClose }: ChatPanelPro
           />
         </Box>
         <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-          <Button type="submit" variant="contained" disabled={sending || !text.trim()}>
+          <Button
+            type="submit"
+            variant="contained"
+            disabled={sending || !text.trim()}
+          >
             {sending ? "Sending..." : "Send"}
           </Button>
         </Box>
@@ -303,5 +336,3 @@ export default function ChatPanel({ variant = "default", onClose }: ChatPanelPro
     </Paper>
   );
 }
-
-
