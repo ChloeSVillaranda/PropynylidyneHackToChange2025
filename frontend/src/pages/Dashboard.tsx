@@ -1,7 +1,6 @@
 import {useState} from 'react';
 import DroneMap from '../components/DroneMap';
 import {Button} from '../components/ui/Button';
-import {Modal} from '../components/ui/Modal';
 
 function Dashboard() {
     const [showModal, setShowModal] = useState(false);
