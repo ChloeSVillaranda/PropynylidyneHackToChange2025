@@ -169,6 +169,9 @@ export const syncCalgaryCameraImages = async (): Promise<CameraSyncResult[]> => 
           source: camera.source,
           sourceId: camera.sourceId,
           roadway: camera.roadway,
+          direction: camera.direction,
+          latitude: camera.latitude,
+          longitude: camera.longitude,
           s3Key,
           capturedAt: new Date().toISOString(),
           imageUrl: view.url

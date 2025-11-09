@@ -18,3 +18,7 @@ jobs:
       run: |
           cd frontend
           docker build -t my-frontend .
+    - name: Build the Docker image for backend
+      run: |
+          cd backend
+          docker build -t backend .
