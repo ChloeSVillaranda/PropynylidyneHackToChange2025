@@ -2,8 +2,8 @@ import { randomUUID } from "crypto";
 
 import {
   DeleteCommand,
-  GetCommand,
   PutCommand,
+  QueryCommand,
   ScanCommand,
   UpdateCommand
 } from "@aws-sdk/lib-dynamodb";
@@ -261,8 +261,9 @@ const ensureMissionScheduleIsValid = async (params: {
   }
 };
 
-const buildKey = (missionId: number) => ({
-  missionId
+const buildKey = (missionId: number, droneId: string) => ({
+  missionId,
+  droneId
 });
 
 export const listMissions = async (): Promise<Mission[]> => {
@@ -291,13 +292,18 @@ export const listMissionsByDrone = async (droneId: string): Promise<Mission[]> =
 };
 
 export const getMissionById = async (missionId: number): Promise<Mission | null> => {
-  const command = new GetCommand({
+  const command = new QueryCommand({
     TableName: MISSIONS_TABLE,
-    Key: buildKey(missionId)
+    KeyConditionExpression: "missionId = :missionId",
+    ExpressionAttributeValues: {
+      ":missionId": missionId
+    },
+    Limit: 1
   });
 
   const result = await documentClient.send(command);
-  return (result.Item as Mission) ?? null;
+  const [item] = (result.Items as Mission[]) ?? [];
+  return item ?? null;
 };
 
 export const createMission = async (input: CreateMissionInput): Promise<Mission> => {
@@ -375,6 +381,10 @@ export const updateMission = async (
     nowIso
   );
 
+  if (updates.droneId !== undefined && updates.droneId !== existingMission.droneId) {
+    throw new MissionValidationError("droneId cannot be changed for an existing mission");
+  }
+
   const mutation: Record<string, unknown> = {};
 
   if (updates.droneId !== undefined && drone.droneId !== existingMission.droneId) {
@@ -421,7 +431,7 @@ export const updateMission = async (
 
   const command = new UpdateCommand({
     TableName: MISSIONS_TABLE,
-    Key: buildKey(missionId),
+    Key: buildKey(existingMission.missionId, existingMission.droneId),
     ConditionExpression: "attribute_exists(missionId)",
     UpdateExpression: `SET ${setExpressions.join(", ")}`,
     ExpressionAttributeNames: expressionAttributeNames,
@@ -434,10 +444,18 @@ export const updateMission = async (
 };
 
 export const deleteMission = async (missionId: number): Promise<void> => {
+  const mission = await getMissionById(missionId);
+
+  if (!mission) {
+    const error = new Error(`Mission ${missionId} not found`);
+    error.name = "ConditionalCheckFailedException";
+    throw error;
+  }
+
   const command = new DeleteCommand({
     TableName: MISSIONS_TABLE,
-    Key: buildKey(missionId),
-    ConditionExpression: "attribute_exists(missionId)"
+    Key: buildKey(mission.missionId, mission.droneId),
+    ConditionExpression: "attribute_exists(missionId) AND attribute_exists(droneId)"
   });
 
   await documentClient.send(command);
