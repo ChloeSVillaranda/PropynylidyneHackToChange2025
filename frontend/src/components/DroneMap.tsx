@@ -137,7 +137,7 @@ export default function DroneMap() {
                     };
                 }),
             );
-        }, 100);
+        }, 300);
 
         return () => clearInterval(interval);
     }, []);
