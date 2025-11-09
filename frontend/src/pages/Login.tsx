@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import '../index.css';
 
 interface LoginProps {
   setIsLoggedIn: (value: boolean) => void;
@@ -21,23 +22,35 @@ function Login({ setIsLoggedIn }: LoginProps) {
 
   return (
     <div style={{ padding: '2rem', maxWidth: '400px', margin: '0 auto' }}>
-      <h2>Login</h2>
+      <h1>Admin Login</h1>
       <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         <input
           type="text"
           placeholder="Username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          style={{ padding: '0.5rem' }}
+          style={{
+            width: '100%',
+            padding: '0.5rem',
+            border: '1px solid #abaaaaff',
+            borderRadius: '4px',
+            boxSizing: 'border-box'
+          }}
         />
         <input
           type="password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          style={{ padding: '0.5rem' }}
+          style={{
+            width: '100%',
+            padding: '0.5rem',
+            border: '1px solid #abaaaaff',
+            borderRadius: '4px',
+            boxSizing: 'border-box'
+          }}
         />
-        <button type="submit" style={{ padding: '0.5rem', cursor: 'pointer' }}>
+        <button type="submit" className='submit-button'>
           Login
         </button>
       </form>
