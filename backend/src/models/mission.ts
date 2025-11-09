@@ -1,15 +1,15 @@
-import { BaseEntity, DroneMetadata, GeoPoint } from "./drone.js";
+export type MissionType = "Patrol" | "Emergency" | "Data Collection";
 
-export type MissionType = "Patrol" | "Emergency" | "Recon" | "Delivery" | string;
+export type RoutePoint = {
+  latitude: number;
+  longitude: number;
+};
 
-export type Mission = BaseEntity & {
-  entityType: "MISSION";
+export type Mission = {
+  missionId: number;
+  droneId: string;
   missionType?: MissionType;
   startTime?: string;
   endTime?: string;
-  route?: GeoPoint[];
-  assignedDroneId?: string;
-  metadata?: DroneMetadata;
-  missionId?: string;
+  route?: RoutePoint[];
 };
-
