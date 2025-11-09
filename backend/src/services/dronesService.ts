@@ -18,7 +18,8 @@ export const listDrones = async (): Promise<Drone[]> => {
 
   const result = await documentClient.send(command);
 
-  return ((result.Items as any[]) ?? []).filter(item => item.model && !item.missionId);
+  const filtered = ((result.Items as any[]) ?? []).filter(item => item.model && !item.missionId);
+  return filtered;
 };
 
 export const getDroneById = async (droneId: string): Promise<Drone | null> => {

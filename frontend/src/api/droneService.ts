@@ -7,19 +7,31 @@ import {
 
 export const droneService = {
   getAllDrones: async (): Promise<Drone[]> => {
+    console.log('[droneService] Fetching drones from:', `${apiConfig.baseURL}/drones`);
+    
     const response = await fetch(`${apiConfig.baseURL}/drones`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
-    if (!response.ok) throw new Error('Failed to fetch drones');
+    
+    console.log('[droneService] Response status:', response.status);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('[droneService] Error response:', errorText);
+      throw new Error('Failed to fetch drones');
+    }
     
     const result = await response.json();
+    console.log('[droneService] Raw response:', result);
     
     // Handle both wrapped {data: []} and plain array responses
     if (result && typeof result === 'object' && 'data' in result) {
+      console.log('[droneService] Returning wrapped data, length:', result.data?.length);
       return Array.isArray(result.data) ? result.data : [];
     }
     
+    console.log('[droneService] Returning plain array, length:', result?.length);
     return Array.isArray(result) ? result : [];
   },
 
