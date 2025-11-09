@@ -1,183 +1,270 @@
-import {useState, useEffect} from 'react';
-import {MapContainer, TileLayer, Marker, Popup, Polyline} from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import droneIconImg from '../assets/drone.png';
-import patrolIconImg from '../assets/drone-blue.png';
-import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
-import markerIcon from 'leaflet/dist/images/marker-icon.png';
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+import { useEffect, useMemo, useState } from "react";
+import { MapContainer, TileLayer, Marker, Popup, Polyline } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import droneIconImg from "../assets/drone.png";
+import patrolIconImg from "../assets/drone-blue.png";
+import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
+import markerIcon from "leaflet/dist/images/marker-icon.png";
+import markerShadow from "leaflet/dist/images/marker-shadow.png";
+import { cameraService } from "../api";
+import { CameraSnapshot, RoutePoint } from "../types";
 
 L.Icon.Default.mergeOptions({
-    iconRetinaUrl: markerIcon2x,
-    iconUrl: markerIcon,
-    shadowUrl: markerShadow,
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
 });
 
 const droneIcon = new L.Icon({
-    iconUrl: droneIconImg,
-    iconSize: [30, 30],
-    iconAnchor: [15, 15],
-    popupAnchor: [0, -15],
+  iconUrl: droneIconImg,
+  iconSize: [30, 30],
+  iconAnchor: [15, 15],
+  popupAnchor: [0, -15],
 });
 
 const patrolDroneIcon = new L.Icon({
-    iconUrl: patrolIconImg,
-    iconSize: [30, 30],
-    iconAnchor: [15, 15],
-    popupAnchor: [0, -15],
+  iconUrl: patrolIconImg,
+  iconSize: [30, 30],
+  iconAnchor: [15, 15],
+  popupAnchor: [0, -15],
 });
 
+const cameraMarkerIcon = L.divIcon({
+  className: "camera-marker-icon",
+  html: `<div class="camera-marker-pin"><span>📷</span></div>`,
+  iconSize: [32, 32],
+  iconAnchor: [16, 32],
+  popupAnchor: [0, -28],
+});
+
+type SimulatedDrone = {
+  id: number;
+  type: "free" | "patrol";
+  pos: [number, number];
+  target: [number, number];
+  route: [number, number][];
+  routeIndex: number;
+};
+
 export default function DroneMap() {
-    const calgaryCoords = [51.0447, -114.0719];
-    //city limits coordinates
-    const bounds = {north: 51.15, south: 51.0, east: -113.9, west: -114.2};
+  const calgaryCoords: [number, number] = [51.0447, -114.0719];
+  const bounds = { north: 51.15, south: 51.0, east: -113.9, west: -114.2 };
 
-    //initializing free roaming and patrol drones inside the bounds
-    const [drones, setDrones] = useState([
-        //free roaming drones
-        ...Array.from({length: 5}, (_, i) => ({
-            id: i + 1,
-            type: 'free',
-            pos: [
-                Math.random() * (bounds.north - bounds.south) + bounds.south,
-                Math.random() * (bounds.east - bounds.west) + bounds.west,
-            ],
-            target: [
-                Math.random() * (bounds.north - bounds.south) + bounds.south,
-                Math.random() * (bounds.east - bounds.west) + bounds.west,
-            ],
-        })),
+  const testpoint: RoutePoint = {
+    latitude: 51.1,
+    longitude: -114.15,
+  };
 
-        //patrol drones
-        {
-            id: 6,
-            type: 'patrol',
-            pos: [51.1, -114.15],
-            route: [
-                [51.1, -114.15],
-                [51.12, -114.142],
-                [51.12, -114.12],
-                [51.1, -114.128],
-            ],
-            routeIndex: 0,
-        },
-        {
-            id: 7,
-            type: 'patrol',
-            pos: [51.0, -113.98],
-            route: [
-                [51.0, -113.98],
-                [51.02, -113.972],
-                [51.02, -113.95],
-                [51.0, -113.958],
-            ],
-            routeIndex: 0,
-        },
-    ]);
+  const [drones, setDrones] = useState<SimulatedDrone[]>(() => [
+    ...Array.from({ length: 5 }, (_, i) => ({
+      id: i + 1,
+      type: "free" as const,
+      pos: [
+        Math.random() * (bounds.north - bounds.south) + bounds.south,
+        Math.random() * (bounds.east - bounds.west) + bounds.west,
+      ] as [number, number],
+      target: [
+        Math.random() * (bounds.north - bounds.south) + bounds.south,
+        Math.random() * (bounds.east - bounds.west) + bounds.west,
+      ] as [number, number],
+      route: [],
+      routeIndex: 0,
+    })),
+    {
+      id: 6,
+      type: "patrol",
+      pos: [51.1, -114.15] as [number, number],
+      route: [
+        [testpoint.latitude, testpoint.longitude] as [number, number],
+        [51.12, -114.142] as [number, number],
+        [51.12, -114.12] as [number, number],
+        [51.1, -114.128] as [number, number],
+      ],
+      routeIndex: 0,
+      target: [51.1, -114.15] as [number, number],
+    },
+    {
+      id: 7,
+      type: "patrol",
+      pos: [51.0, -113.98] as [number, number],
+      route: [
+        [51.0, -113.98] as [number, number],
+        [51.02, -113.972] as [number, number],
+        [51.02, -113.95] as [number, number],
+        [51.0, -113.958] as [number, number],
+      ],
+      routeIndex: 0,
+      target: [51.0, -113.98] as [number, number],
+    },
+  ]);
 
-    //moving drones towards a target
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setDrones((prev) =>
-                prev.map((drone) => {
-                    let [lat, lng] = drone.pos;
-                    let tLat, tLng;
+  const [cameraSnapshots, setCameraSnapshots] = useState<CameraSnapshot[]>([]);
+  const [cameraError, setCameraError] = useState<string | null>(null);
 
-                    if (drone.type === 'patrol') {
-                        //get current route target
-                        const target = drone.route[drone.routeIndex];
-                        [tLat, tLng] = target;
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDrones((prev) =>
+        prev.map((drone) => {
+          const [lat, lng] = drone.pos;
+          let tLat: number;
+          let tLng: number;
 
-                        //check if reached the waypoint
-                        const reached =
-                            Math.abs(tLat - lat) < 0.0003 &&
-                            Math.abs(tLng - lng) < 0.0003;
+          if (drone.type === "patrol") {
+            const target = drone.route[drone.routeIndex];
+            [tLat, tLng] = target;
 
-                        if (reached) {
-                            //go to next point (looping)
-                            const nextIndex =
-                                (drone.routeIndex + 1) % drone.route.length;
-                            return {...drone, routeIndex: nextIndex};
-                        }
-                    } else {
-                        //free roaming — random targets
-                        [tLat, tLng] = drone.target;
-                    }
+            const reached =
+              Math.abs(tLat - lat) < 0.0003 && Math.abs(tLng - lng) < 0.0003;
 
-                    //move 0.0005 degrees per tick toward target
-                    const step = 0.0005;
-                    const newLat =
-                        Math.abs(tLat - lat) < step
-                            ? tLat
-                            : lat + Math.sign(tLat - lat) * step;
-                    const newLng =
-                        Math.abs(tLng - lng) < step
-                            ? tLng
-                            : lng + Math.sign(tLng - lng) * step;
+            if (reached) {
+              const nextIndex = (drone.routeIndex + 1) % drone.route.length;
+              return { ...drone, routeIndex: nextIndex };
+            }
+          } else {
+            [tLat, tLng] = drone.target;
+          }
 
-                    //if reached target, pick a new random target
-                    const newTarget =
-                        drone.type === 'free' &&
-                        newLat === tLat &&
-                        newLng === tLng
-                            ? [
-                                  Math.random() *
-                                      (bounds.north - bounds.south) +
-                                      bounds.south,
-                                  Math.random() * (bounds.east - bounds.west) +
-                                      bounds.west,
-                              ]
-                            : drone.target;
+          const step = 0.0005;
+          const newLat =
+            Math.abs(tLat - lat) < step ? tLat : lat + Math.sign(tLat - lat) * step;
+          const newLng =
+            Math.abs(tLng - lng) < step ? tLng : lng + Math.sign(tLng - lng) * step;
 
-                    return {
-                        ...drone,
-                        pos: [newLat, newLng],
-                        target: newTarget,
-                    };
-                }),
-            );
-        }, 100);
+          const newTarget =
+            drone.type === "free" && newLat === tLat && newLng === tLng
+              ? [
+                  Math.random() * (bounds.north - bounds.south) + bounds.south,
+                  Math.random() * (bounds.east - bounds.west) + bounds.west,
+                ]
+              : drone.target;
 
-        return () => clearInterval(interval);
-    }, []);
+          return {
+            ...drone,
+            pos: [newLat, newLng],
+            target: newTarget as [number, number],
+          };
+        })
+      );
+    }, 100);
 
-    return (
-        <MapContainer
-            center={calgaryCoords}
-            zoom={13}
-            scrollWheelZoom={true}
-            style={{width: '100%', height: '650px'}}>
-            <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
-            />
+    return () => clearInterval(interval);
+  }, []);
 
-            {drones.map((drone) => (
-                <Marker
-                    key={drone.id}
-                    position={drone.pos}
-                    icon={
-                        drone.type === 'patrol' ? patrolDroneIcon : droneIcon
-                    }>
-                    <Popup>
-                        Drone {drone.id} <br />
-                        Type: {drone.type}
-                    </Popup>
-                </Marker>
-            ))}
+  useEffect(() => {
+    let isMounted = true;
 
-            {drones
-                .filter((d) => d.type === 'patrol')
-                .map((d) => (
-                    <Polyline
-                        key={`route-${d.id}`}
-                        positions={d.route}
-                        color='red'
-                        weight={3}
-                        opacity={0.7}
-                    />
-                ))}
-        </MapContainer>
-    );
+    const loadSnapshots = async () => {
+      try {
+        const snapshots = await cameraService.getCalgarySnapshots();
+        if (isMounted) {
+          setCameraSnapshots(snapshots);
+          setCameraError(null);
+        }
+      } catch (error) {
+        console.error("[DroneMap] Failed to load camera snapshots", error);
+        if (isMounted) {
+          setCameraError("Unable to load live camera feeds.");
+        }
+      }
+    };
+
+    void loadSnapshots();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const validCameraSnapshots = useMemo(
+    () =>
+      cameraSnapshots.filter(
+        (snapshot) =>
+          typeof snapshot.latitude === "number" &&
+          typeof snapshot.longitude === "number" &&
+          snapshot.imageUrl
+      ),
+    [cameraSnapshots]
+  );
+
+  return (
+    <MapContainer
+      center={calgaryCoords}
+      zoom={12}
+      scrollWheelZoom
+      style={{ width: "100%", height: "650px" }}
+    >
+      <TileLayer
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      />
+
+      {drones.map((drone) => (
+        <Marker
+          key={drone.id}
+          position={drone.pos}
+          icon={drone.type === "patrol" ? patrolDroneIcon : droneIcon}
+        >
+          <Popup>
+            <strong>Drone {drone.id}</strong>
+            <br />
+            Type: {drone.type}
+          </Popup>
+        </Marker>
+      ))}
+
+      {drones
+        .filter((d) => d.type === "patrol")
+        .map((d) => (
+          <Polyline
+            key={`route-${d.id}`}
+            positions={d.route}
+            color="red"
+            weight={3}
+            opacity={0.7}
+          />
+        ))}
+
+      {validCameraSnapshots.map((snapshot) => (
+        <Marker
+          key={`camera-${snapshot.cameraId}-${snapshot.viewId}`}
+          position={[snapshot.latitude!, snapshot.longitude!] as [number, number]}
+          icon={cameraMarkerIcon}
+        >
+          <Popup minWidth={260}>
+            <div className="camera-popup">
+              <p className="camera-popup-title">
+                {snapshot.location ?? `Camera ${snapshot.cameraId}`}
+              </p>
+              {snapshot.direction && (
+                <p className="camera-popup-direction">Facing {snapshot.direction}</p>
+              )}
+              {snapshot.imageUrl ? (
+                <img
+                  src={snapshot.imageUrl}
+                  alt={snapshot.location ?? `Camera ${snapshot.cameraId}`}
+                  className="camera-popup-image"
+                />
+              ) : (
+                <p className="camera-popup-placeholder">No image available</p>
+              )}
+              <p className="camera-popup-meta">
+                Updated: {new Date(snapshot.capturedAt).toLocaleString()}
+              </p>
+              {snapshot.roadway && (
+                <p className="camera-popup-roadway">{snapshot.roadway}</p>
+              )}
+            </div>
+          </Popup>
+        </Marker>
+      ))}
+
+      {cameraError && (
+        <Popup position={calgaryCoords}>
+          <p>{cameraError}</p>
+        </Popup>
+      )}
+    </MapContainer>
+  );
 }
+

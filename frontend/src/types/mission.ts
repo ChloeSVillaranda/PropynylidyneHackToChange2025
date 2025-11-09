@@ -5,6 +5,7 @@ export interface Mission {
   endTime?: string;
   route?: RoutePoint[];
   missionType?: MissionType;
+  routeSuggestions?: RouteSuggestion[];
 }
 
 export interface RoutePoint {
@@ -16,6 +17,28 @@ export type MissionType = 'Patrol' | 'Emergency' | 'Data Collection';
 
 export type MissionStatus = 'pending' | 'active' | 'completed' | 'cancelled' | 'in-progress';
 
+export type RouteSuggestionStatus = 'pending' | 'in-progress' | 'completed';
+
+export interface RouteSuggestion {
+  suggestionId: string;
+  summary: string;
+  status: RouteSuggestionStatus;
+  suggestedRoute?: RoutePoint[];
+  notes?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface RouteSuggestionInput {
+  suggestionId?: string;
+  summary: string;
+  status?: RouteSuggestionStatus;
+  suggestedRoute?: RoutePoint[];
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface CreateMissionRequest {
   droneId: string;
   missionId?: string;
@@ -24,6 +47,7 @@ export interface CreateMissionRequest {
   route?: RoutePoint[];
   missionType?: MissionType;
   metadata?: Record<string, unknown>;
+  routeSuggestions?: RouteSuggestionInput[];
 }
 
 export interface UpdateMissionRequest {
@@ -31,6 +55,7 @@ export interface UpdateMissionRequest {
   endTime?: string;
   route?: RoutePoint[];
   missionType?: MissionType;
+  routeSuggestions?: RouteSuggestionInput[];
 }
 
 export interface MissionResponse {
