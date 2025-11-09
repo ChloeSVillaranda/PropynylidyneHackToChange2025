@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { droneService } from '../api';
-import { apiConfig } from '../api/config';
 import { Drone } from '../types';
 import DroneModal from '../components/DroneModal';
 

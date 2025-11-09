@@ -2,9 +2,7 @@ import { apiConfig, getAuthHeaders } from './config';
 import { 
   Mission, 
   CreateMissionRequest, 
-  UpdateMissionRequest, 
-  MissionResponse, 
-  MissionsListResponse 
+  UpdateMissionRequest
 } from '../types';
 
 export const missionService = {
@@ -14,8 +12,15 @@ export const missionService = {
       headers: getAuthHeaders(),
     });
     if (!response.ok) throw new Error('Failed to fetch missions');
-    const result: MissionsListResponse = await response.json();
-    return result.data;
+    
+    const result = await response.json();
+    
+    // Handle both wrapped {data: []} and plain array responses
+    if (result && typeof result === 'object' && 'data' in result) {
+      return Array.isArray(result.data) ? result.data : [];
+    }
+    
+    return Array.isArray(result) ? result : [];
   },
 
   getMissionById: async (droneId: string): Promise<Mission> => {
@@ -24,18 +29,14 @@ export const missionService = {
       headers: getAuthHeaders(),
     });
     if (!response.ok) throw new Error('Failed to fetch mission');
-    const result: MissionResponse = await response.json();
-    return result.data;
-  },
-
-  getMissionsByDroneId: async (droneId: string): Promise<Mission[]> => {
-    const response = await fetch(`${apiConfig.baseURL}/drones/${droneId}/missions`, {
-      method: 'GET',
-      headers: getAuthHeaders(),
-    });
-    if (!response.ok) throw new Error('Failed to fetch missions for drone');
-    const result: MissionsListResponse = await response.json();
-    return result.data;
+    
+    const result = await response.json();
+    
+    if (result && typeof result === 'object' && 'data' in result) {
+      return result.data;
+    }
+    
+    return result;
   },
 
   createMission: async (missionData: CreateMissionRequest): Promise<Mission> => {
@@ -47,20 +48,40 @@ export const missionService = {
         entityType: 'MISSION'
       }),
     });
-    if (!response.ok) throw new Error('Failed to create mission');
-    const result: MissionResponse = await response.json();
-    return result.data;
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Create mission failed:', response.status, errorText);
+      throw new Error(`Failed to create mission: ${response.statusText}`);
+    }
+    
+    const result = await response.json();
+    
+    if (result && typeof result === 'object' && 'data' in result) {
+      return result.data;
+    }
+    
+    return result;
   },
 
   updateMission: async (droneId: string, missionData: UpdateMissionRequest): Promise<Mission> => {
     const response = await fetch(`${apiConfig.baseURL}/missions/${droneId}`, {
-      method: 'PUT',
+      method: 'PATCH',
       headers: getAuthHeaders(),
       body: JSON.stringify(missionData),
     });
-    if (!response.ok) throw new Error('Failed to update mission');
-    const result: MissionResponse = await response.json();
-    return result.data;
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Update mission failed:', response.status, errorText);
+      throw new Error(`Failed to update mission: ${response.statusText}`);
+    }
+    
+    const result = await response.json();
+    
+    if (result && typeof result === 'object' && 'data' in result) {
+      return result.data;
+    }
+    
+    return result;
   },
 
   deleteMission: async (droneId: string): Promise<void> => {
@@ -68,6 +89,10 @@ export const missionService = {
       method: 'DELETE',
       headers: getAuthHeaders(),
     });
-    if (!response.ok) throw new Error('Failed to delete mission');
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Delete mission failed:', response.status, errorText);
+      throw new Error(`Failed to delete mission: ${response.statusText}`);
+    }
   },
 };

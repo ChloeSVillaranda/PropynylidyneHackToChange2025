@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CreateMissionRequest, MissionType, RoutePoint } from '../types';
+import { CreateMissionRequest } from '../types';
 
 interface CreateMissionModalProps {
   onClose: () => void;
