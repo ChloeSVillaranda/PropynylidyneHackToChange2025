@@ -1,10 +1,11 @@
-export type UserRole = "admin" | "pilot" | "user";
+export type UserRole = "admin" | "user";
 
 export interface User {
   email: string;
   fullName: string;
-  password: string; // Add this field
+  password: string;
   role: UserRole;
+  lastLoginAt?: string;
   accessLevel?: string[];
   metadata?: Record<string, unknown>;
   createdAt: string;
