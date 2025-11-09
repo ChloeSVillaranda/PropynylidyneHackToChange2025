@@ -49,22 +49,28 @@ export default function Header({ isLoggedIn }: HeaderProps) {
 
         {/* Center / Right: nav icons, theme toggle, login */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <NavButton title="Dashboard" onClick={go("/")}>
-            <HomeIcon />
-          </NavButton>
+          {/* show nav only when logged in */}
+          {isLoggedIn && (
+            <>
+              <NavButton title="Dashboard" onClick={go("/")}>
+                <HomeIcon />
+              </NavButton>
 
-          <NavButton title="View Drones" onClick={go("/view-drones")}>
-            <MapIcon />
-          </NavButton>
+              <NavButton title="View Drones" onClick={go("/view-drones")}>
+                <MapIcon />
+              </NavButton>
 
-          <NavButton title="Manage Missions" onClick={go("/manage-missions")}>
-            <ListAltIcon />
-          </NavButton>
+              <NavButton title="Manage Missions" onClick={go("/manage-missions")}>
+                <ListAltIcon />
+              </NavButton>
 
-          <NavButton title="Settings" onClick={go("/settings")}>
-            <SettingsIcon />
-          </NavButton>
+              <NavButton title="Settings" onClick={go("/settings")}>
+                <SettingsIcon />
+              </NavButton>
+            </>
+          )}
 
+          {/* theme toggle (always visible) */}
           <NavButton
             title={muiTheme.palette.mode === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
             onClick={colorMode.toggleColorMode}
