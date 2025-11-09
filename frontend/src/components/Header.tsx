@@ -73,10 +73,19 @@ export default function Header({ isLoggedIn, setIsLoggedIn }: HeaderProps) {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
   const iconStyle = {
-    color: '#1e40af',
+    color: muiTheme.palette.mode === "dark" ? '#fff' : '#1e40af',
     "&:hover": {
-      color: '#2563eb'
+      color: muiTheme.palette.mode === "dark" ? '#93c5fd' : '#2563eb'
     }
+  };
+
+  // Update user greeting color to match icons
+  const userGreetingStyle = {
+    display: 'flex', 
+    alignItems: 'center', 
+    ml: 2,
+    mr: 1,
+    color: muiTheme.palette.mode === "dark" ? '#fff' : '#1e40af'
   };
 
   return (
@@ -135,13 +144,7 @@ export default function Header({ isLoggedIn, setIsLoggedIn }: HeaderProps) {
               </NavButton>
 
               {/* User greeting */}
-              <Box sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                ml: 2,
-                mr: 1,
-                color: iconStyle.color 
-              }}>
+              <Box sx={userGreetingStyle}>
                 <PersonIcon sx={{ mr: 1 }} />
                 <Typography variant="body2" sx={{ fontWeight: 500 }}>
                   Hello, {user.name || 'User'}
