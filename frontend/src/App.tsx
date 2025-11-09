@@ -19,7 +19,7 @@ function App() {
     <AppThemeProvider>
       <Router>
         <div className="App">
-          <Header isLoggedIn={isLoggedIn} />
+          <Header isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/login" element={<Login setIsLoggedIn={setIsLoggedIn} />} />

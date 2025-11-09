@@ -20,6 +20,7 @@ import { Typography } from "@mui/material";
 
 interface HeaderProps {
   isLoggedIn?: boolean;
+  setIsLoggedIn?: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const NavButton: React.FC<{ title: string; onClick?: () => void; children?: React.ReactNode }> = ({ title, onClick, children }) => (
@@ -30,12 +31,26 @@ const NavButton: React.FC<{ title: string; onClick?: () => void; children?: Reac
   </Tooltip>
 );
 
-export default function Header({ isLoggedIn }: HeaderProps) {
+export default function Header({ isLoggedIn, setIsLoggedIn }: HeaderProps) {
   const navigate = useNavigate();
   const muiTheme = useTheme();
   const colorMode = useColorMode();
 
   const go = (path: string) => () => navigate(path);
+  const handleAuthClick = () => {
+    if (isLoggedIn) {
+      try {
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("user");
+      } catch (e) {
+        // ignore
+      }
+      if (typeof setIsLoggedIn === "function") setIsLoggedIn(false);
+      navigate("/login");
+    } else {
+      navigate("/login");
+    }
+  };
 
   return (
     <AppBar position="static" color="primary">
@@ -78,7 +93,7 @@ export default function Header({ isLoggedIn }: HeaderProps) {
             {muiTheme.palette.mode === "dark" ? <Brightness7Icon /> : <Brightness4Icon />}
           </NavButton>
 
-          <NavButton title={isLoggedIn ? "Logout" : "Login"} onClick={go("/login")}>
+          <NavButton title={isLoggedIn ? "Logout" : "Login"} onClick={handleAuthClick}>
             {isLoggedIn ? <LogoutIcon /> : <LoginIcon />}
           </NavButton>
         </Box>
