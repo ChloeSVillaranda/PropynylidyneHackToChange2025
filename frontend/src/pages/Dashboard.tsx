@@ -77,7 +77,7 @@ export default function Dashboard() {
         }}
       >
         <MissionSection />
-        <DronesSection onShowModal={() => setShowModal(true)} />
+        <DronesSection />
         <ContactSection />
       </Box>
 
