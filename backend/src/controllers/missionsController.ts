@@ -1,5 +1,9 @@
 import { Request, Response } from "express";
 import {
+  DroneNotFoundError,
+  DroneUnavailableError,
+  MissionConflictError,
+  MissionValidationError,
   createMission,
   deleteMission,
   getMissionById,
@@ -47,6 +51,7 @@ export const getMission = async (req: Request, res: Response) => {
   res.json({ data: mission });
 };
 
+
 export const createMissionHandler = async (req: Request, res: Response) => {
   const payload = req.body;
   const ts = new Date().toISOString();
@@ -89,6 +94,13 @@ export const createMissionHandler = async (req: Request, res: Response) => {
     }
   }
 
+  if (payload.routeSuggestions !== undefined) {
+    if (!Array.isArray(payload.routeSuggestions)) {
+      res.status(400).json({ message: "routeSuggestions must be an array" });
+      return;
+    }
+  }
+
   // Build mission object to persist
   const missionToSave = {
     missionId,
@@ -96,7 +108,8 @@ export const createMissionHandler = async (req: Request, res: Response) => {
     missionType: payload.missionType,
     startTime: payload.startTime,
     endTime: payload.endTime,
-    route: payload.route
+    route: payload.route,
+    routeSuggestions: payload.routeSuggestions
   };
 
   try {
@@ -105,6 +118,27 @@ export const createMissionHandler = async (req: Request, res: Response) => {
     res.status(201).json({ data: saved });
   } catch (error) {
     console.error('[createMissionHandler] Error:', error);
+
+    if (error instanceof MissionConflictError) {
+      res.status(409).json({ message: error.message, conflictingMissionId: error.conflictingMissionId });
+      return;
+    }
+
+    if (error instanceof DroneNotFoundError) {
+      res.status(404).json({ message: error.message });
+      return;
+    }
+
+    if (error instanceof DroneUnavailableError) {
+      res.status(409).json({ message: error.message });
+      return;
+    }
+
+    if (error instanceof MissionValidationError) {
+      res.status(400).json({ message: error.message });
+      return;
+    }
+
     if ((error as Error).name === "ConditionalCheckFailedException") {
       res.status(409).json({ message: `Mission conflict (rare UUID collision)` });
       return;
@@ -135,6 +169,13 @@ export const updateMissionHandler = async (req: Request, res: Response) => {
     }
   }
 
+  if (Object.prototype.hasOwnProperty.call(updates, "droneId") && updates.droneId !== undefined) {
+    if (typeof updates.droneId !== "string" || updates.droneId.trim().length === 0) {
+      res.status(400).json({ message: "droneId must be a non-empty string when provided" });
+      return;
+    }
+  }
+
   if (updates.route) {
     if (!Array.isArray(updates.route)) {
       res.status(400).json({ message: "route must be an array of waypoints" });
@@ -146,6 +187,13 @@ export const updateMissionHandler = async (req: Request, res: Response) => {
         res.status(400).json({ message: `route[${i}] must have numeric latitude and longitude` });
         return;
       }
+    }
+  }
+
+  if (Object.prototype.hasOwnProperty.call(updates, "routeSuggestions") && updates.routeSuggestions !== undefined) {
+    if (!Array.isArray(updates.routeSuggestions)) {
+      res.status(400).json({ message: "routeSuggestions must be an array" });
+      return;
     }
   }
 
@@ -167,10 +215,32 @@ export const updateMissionHandler = async (req: Request, res: Response) => {
       res.status(400).json({ message: "Provide at least one field to update" });
       return;
     }
+
+    if (error instanceof MissionConflictError) {
+      res.status(409).json({ message: error.message, conflictingMissionId: error.conflictingMissionId });
+      return;
+    }
+
+    if (error instanceof MissionValidationError) {
+      res.status(400).json({ message: error.message });
+      return;
+    }
+
+    if (error instanceof DroneNotFoundError) {
+      res.status(404).json({ message: error.message });
+      return;
+    }
+
+    if (error instanceof DroneUnavailableError) {
+      res.status(409).json({ message: error.message });
+      return;
+    }
+
     if ((error as Error).name === "ConditionalCheckFailedException") {
       res.status(404).json({ message: `Mission ${id} not found` });
       return;
     }
+
     res.status(500).json({ message: "Failed to update mission" });
   }
 };

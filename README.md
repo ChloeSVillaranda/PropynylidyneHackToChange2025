@@ -17,6 +17,10 @@ The backend is written in Typescript and uses Node.js to create APIs.
 3. `npm start`
 4. Open localhost:4000/api-docs
 
+### Mission scheduling safeguards
+- API now validates drone existence and maintenance status before assigning missions and blocks overlapping schedules for the same drone.
+- Mission payloads can include a `routeSuggestions` to-do list (`summary`, optional `status`, `suggestedRoute`, and `notes`) so planners can curate route options alongside the canonical mission route.
+
 ## Architecture
 
 ## Database

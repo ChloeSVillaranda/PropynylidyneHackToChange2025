@@ -1,5 +1,7 @@
-import { CreateMissionRequest } from '../types';
-import { useState } from 'react';
+import { useState } from "react";
+import type { CSSProperties } from "react";
+
+import { CreateMissionRequest, MissionType } from "../types";
 
 interface CreateMissionModalProps {
   onClose: () => void;
@@ -7,250 +9,369 @@ interface CreateMissionModalProps {
   loading: boolean;
 }
 
-function CreateMissionModal({ onClose, onCreate, loading }: CreateMissionModalProps) {
-  const [formData, setFormData] = useState<CreateMissionRequest>({
-    droneId: '',
-    missionType: 'Patrol',
-    startTime: '',
-    endTime: '',
-    route: []
-  });
-  const [newWaypoint, setNewWaypoint] = useState({ latitude: 0, longitude: 0 });
+type RouteDraft = {
+  latitude: string;
+  longitude: string;
+};
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+const missionTypes: MissionType[] = ["Patrol", "Emergency", "Data Collection"];
+
+const modalOverlayStyle: CSSProperties = {
+  position: "fixed",
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  backgroundColor: "rgba(0, 0, 0, 0.5)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  zIndex: 1000,
+};
+
+const modalStyle: CSSProperties = {
+  backgroundColor: "white",
+  borderRadius: "8px",
+  padding: "2rem",
+  maxWidth: "600px",
+  width: "90%",
+  maxHeight: "90vh",
+  overflowY: "auto",
+  boxSizing: "border-box",
+};
+
+const labelStyle: CSSProperties = {
+  display: "block",
+  marginBottom: "0.5rem",
+  fontWeight: 600,
+};
+
+const inputStyle: CSSProperties = {
+  width: "100%",
+  padding: "0.5rem",
+  border: "1px solid #ccc",
+  borderRadius: "4px",
+  boxSizing: "border-box",
+};
+
+const helperTextStyle: CSSProperties = {
+  fontSize: "0.8rem",
+  color: "#666",
+  marginTop: "0.25rem",
+};
+
+function CreateMissionModal({ onClose, onCreate, loading }: CreateMissionModalProps) {
+  const [droneId, setDroneId] = useState("");
+  const [missionType, setMissionType] = useState<MissionType>("Patrol");
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
+  const [route, setRoute] = useState<RouteDraft[]>([]);
+  const [error, setError] = useState("");
+
+  const resetForm = () => {
+    setDroneId("");
+    setMissionType("Patrol");
+    setStartTime("");
+    setEndTime("");
+    setRoute([]);
+    setError("");
   };
 
   const handleAddWaypoint = () => {
-    if (newWaypoint.latitude !== 0 || newWaypoint.longitude !== 0) {
-      setFormData(prev => ({
-        ...prev,
-        route: [...(prev.route || []), newWaypoint]
-      }));
-      setNewWaypoint({ latitude: 0, longitude: 0 });
-    }
+    setRoute((prev) => [...prev, { latitude: "", longitude: "" }]);
+  };
+
+  const handleWaypointChange = (index: number, field: keyof RouteDraft, value: string) => {
+    setRoute((prev) => {
+      const next = [...prev];
+      next[index] = {
+        ...next[index],
+        [field]: value,
+      };
+      return next;
+    });
   };
 
   const handleRemoveWaypoint = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      route: prev.route?.filter((_, i) => i !== index)
-    }));
+    setRoute((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onCreate(formData);
+  const parseIso = (value: string) => {
+    if (!value) return undefined;
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return undefined;
+    }
+    return date.toISOString();
+  };
+
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!droneId.trim()) {
+      setError("Drone ID is required.");
+      return;
+    }
+
+    const trimmedDroneId = droneId.trim();
+    const trimmedRoute = route.map((point) => ({
+      latitude: point.latitude.trim(),
+      longitude: point.longitude.trim(),
+    }));
+
+    const parsedRoute = [];
+    for (let i = 0; i < trimmedRoute.length; i++) {
+      const { latitude, longitude } = trimmedRoute[i];
+      if (latitude === "" || longitude === "") {
+        setError(`Waypoint ${i + 1} must include both latitude and longitude.`);
+        return;
+      }
+
+      const lat = Number(latitude);
+      const lng = Number(longitude);
+
+      if (Number.isNaN(lat) || Number.isNaN(lng)) {
+        setError(`Waypoint ${i + 1} must contain valid numbers.`);
+        return;
+      }
+
+      parsedRoute.push({ latitude: lat, longitude: lng });
+    }
+
+    const startIso = parseIso(startTime);
+    const endIso = parseIso(endTime);
+
+    if (startIso && endIso) {
+      const startDate = new Date(startIso);
+      const endDate = new Date(endIso);
+
+      if (startDate.getTime() > endDate.getTime()) {
+        setError("End time must be after start time.");
+        return;
+      }
+    }
+
+    const payload: CreateMissionRequest = {
+      droneId: trimmedDroneId,
+      missionType,
+      startTime: startIso,
+      endTime: endIso,
+      route: parsedRoute.length > 0 ? parsedRoute : undefined,
+    };
+
+    onCreate(payload);
+    resetForm();
   };
 
   return (
-    <div 
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000
-      }}
-      onClick={onClose}
-    >
-      <div 
-        style={{
-          backgroundColor: 'white',
-          borderRadius: '8px',
-          padding: '2rem',
-          maxWidth: '600px',
-          width: '90%',
-          maxHeight: '90vh',
-          overflow: 'auto'
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+    <div style={modalOverlayStyle} onClick={onClose}>
+      <div style={modalStyle} onClick={(event) => event.stopPropagation()}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
           <h2 style={{ margin: 0 }}>Create New Mission</h2>
           <button
+            type="button"
             onClick={onClose}
             style={{
-              background: 'none',
-              border: 'none',
-              fontSize: '1.5rem',
-              cursor: 'pointer',
-              padding: '0',
-              color: '#666'
+              background: "none",
+              border: "none",
+              fontSize: "1.5rem",
+              cursor: "pointer",
+              color: "#666",
             }}
+            aria-label="Close"
           >
             ×
           </button>
         </div>
 
+        {error && (
+          <div
+            style={{
+              marginBottom: "1rem",
+              padding: "0.75rem 1rem",
+              backgroundColor: "#ffebee",
+              color: "#c62828",
+              borderRadius: "6px",
+              fontSize: "0.9rem",
+            }}
+          >
+            {error}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-              Drone ID *
-            </label>
-            <input
-              type="text"
-              name="droneId"
-              value={formData.droneId}
-              onChange={handleChange}
-              required
-              placeholder="e.g., drone-001"
-              style={{
-                width: '100%',
-                padding: '0.5rem',
-                border: '1px solid #ccc',
-                borderRadius: '4px',
-                boxSizing: 'border-box'
-              }}
-            />
-          </div>
-
-          <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-              Mission Type
-            </label>
-            <select
-              name="missionType"
-              value={formData.missionType || ''}
-              onChange={handleChange}
-              style={{
-                width: '100%',
-                padding: '0.5rem',
-                border: '1px solid #ccc',
-                borderRadius: '4px',
-                boxSizing: 'border-box'
-              }}
-            >
-              <option value="Patrol">Patrol</option>
-              <option value="Emergency">Emergency</option>
-              <option value="Data Collection">Data Collection</option>
-            </select>
-          </div>
-
-          <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-              Start Time
-            </label>
-            <input
-              type="datetime-local"
-              name="startTime"
-              value={formData.startTime}
-              onChange={handleChange}
-              style={{
-                width: '100%',
-                padding: '0.5rem',
-                border: '1px solid #ccc',
-                borderRadius: '4px',
-                boxSizing: 'border-box'
-              }}
-            />
-          </div>
-
-          <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-              End Time
-            </label>
-            <input
-              type="datetime-local"
-              name="endTime"
-              value={formData.endTime}
-              onChange={handleChange}
-              style={{
-                width: '100%',
-                padding: '0.5rem',
-                border: '1px solid #ccc',
-                borderRadius: '4px',
-                boxSizing: 'border-box'
-              }}
-            />
-          </div>
-
-          <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-              Route Waypoints
-            </label>
-            <div style={{ border: '1px solid #ccc', borderRadius: '4px', padding: '0.5rem', maxHeight: '150px', overflow: 'auto' }}>
-              {formData.route && formData.route.length > 0 ? (
-                formData.route.map((waypoint, index) => (
-                  <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.25rem 0', borderBottom: '1px solid #eee' }}>
-                    <span style={{ fontSize: '0.9rem' }}>
-                      {index + 1}. Lat: {waypoint.latitude.toFixed(4)}, Lng: {waypoint.longitude.toFixed(4)}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveWaypoint(index)}
-                      style={{ background: 'none', border: 'none', color: '#f44336', cursor: 'pointer', fontSize: '1.2rem' }}
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))
-              ) : (
-                <p style={{ margin: 0, color: '#666', fontSize: '0.9rem' }}>No waypoints added</p>
-              )}
+          <div style={{ display: "grid", gap: "1rem", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
+            <div>
+              <label style={labelStyle} htmlFor="mission-droneId">
+                Drone ID
+              </label>
+              <input
+                id="mission-droneId"
+                type="text"
+                value={droneId}
+                onChange={(event) => setDroneId(event.target.value)}
+                style={inputStyle}
+                placeholder="e.g. drone-001"
+                required
+              />
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '0.5rem', marginTop: '0.5rem' }}>
+
+            <div>
+              <label style={labelStyle} htmlFor="mission-type">
+                Mission Type
+              </label>
+              <select
+                id="mission-type"
+                value={missionType}
+                onChange={(event) => setMissionType(event.target.value as MissionType)}
+                style={inputStyle}
+              >
+                {missionTypes.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label style={labelStyle} htmlFor="mission-start">
+                Start Time
+              </label>
               <input
-                type="number"
-                step="any"
-                placeholder="Latitude"
-                value={newWaypoint.latitude || ''}
-                onChange={(e) => setNewWaypoint(prev => ({ ...prev, latitude: parseFloat(e.target.value) || 0 }))}
-                style={{
-                  padding: '0.5rem',
-                  border: '1px solid #ccc',
-                  borderRadius: '4px'
-                }}
+                id="mission-start"
+                type="datetime-local"
+                value={startTime}
+                onChange={(event) => setStartTime(event.target.value)}
+                style={inputStyle}
               />
+              <p style={helperTextStyle}>Leave blank to start immediately.</p>
+            </div>
+
+            <div>
+              <label style={labelStyle} htmlFor="mission-end">
+                End Time
+              </label>
               <input
-                type="number"
-                step="any"
-                placeholder="Longitude"
-                value={newWaypoint.longitude || ''}
-                onChange={(e) => setNewWaypoint(prev => ({ ...prev, longitude: parseFloat(e.target.value) || 0 }))}
-                style={{
-                  padding: '0.5rem',
-                  border: '1px solid #ccc',
-                  borderRadius: '4px'
-                }}
+                id="mission-end"
+                type="datetime-local"
+                value={endTime}
+                onChange={(event) => setEndTime(event.target.value)}
+                style={inputStyle}
               />
+              <p style={helperTextStyle}>Optional if the mission end time is not known.</p>
+            </div>
+          </div>
+
+          <div style={{ marginTop: "1.5rem" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: "1rem" }}>Route waypoints</h3>
+                <p style={{ ...helperTextStyle, marginTop: "0.25rem" }}>
+                  Add latitude and longitude pairs to plot the mission route.
+                </p>
+              </div>
               <button
                 type="button"
                 onClick={handleAddWaypoint}
                 style={{
-                  padding: '0.5rem 1rem',
-                  backgroundColor: '#2196F3',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
+                  padding: "0.5rem 1rem",
+                  borderRadius: "4px",
+                  border: "1px solid #4CAF50",
+                  backgroundColor: "#4CAF50",
+                  color: "white",
+                  cursor: "pointer",
                 }}
               >
-                Add
+                Add waypoint
               </button>
             </div>
+
+            {route.length === 0 ? (
+              <p
+                style={{
+                  border: "1px dashed #ccc",
+                  borderRadius: "6px",
+                  padding: "1rem",
+                  textAlign: "center",
+                  fontSize: "0.9rem",
+                  color: "#666",
+                  backgroundColor: "#fafafa",
+                }}
+              >
+                No waypoints added yet. Use “Add waypoint” to start building the route.
+              </p>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                {route.map((point, index) => (
+                  <div
+                    key={`${index}-${point.latitude}-${point.longitude}`}
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr)) auto",
+                      gap: "0.5rem",
+                      border: "1px solid #e0e0e0",
+                      borderRadius: "6px",
+                      padding: "0.75rem",
+                      backgroundColor: "#f9f9f9",
+                    }}
+                  >
+                    <div>
+                      <label style={{ ...labelStyle, fontSize: "0.8rem", marginBottom: "0.25rem" }}>
+                        Latitude
+                      </label>
+                      <input
+                        type="number"
+                        step="any"
+                        value={point.latitude}
+                        onChange={(event) => handleWaypointChange(index, "latitude", event.target.value)}
+                        style={inputStyle}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ ...labelStyle, fontSize: "0.8rem", marginBottom: "0.25rem" }}>
+                        Longitude
+                      </label>
+                      <input
+                        type="number"
+                        step="any"
+                        value={point.longitude}
+                        onChange={(event) => handleWaypointChange(index, "longitude", event.target.value)}
+                        style={inputStyle}
+                      />
+                    </div>
+                    <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "flex-end" }}>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveWaypoint(index)}
+                        style={{
+                          border: "1px solid #d32f2f",
+                          backgroundColor: "#d32f2f",
+                          color: "white",
+                          borderRadius: "4px",
+                          padding: "0.45rem 0.9rem",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
-          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem", marginTop: "2rem" }}>
             <button
               type="button"
               onClick={onClose}
               style={{
-                padding: '0.75rem 1.5rem',
-                backgroundColor: '#e0e0e0',
-                color: '#333',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer'
+                padding: "0.75rem 1.5rem",
+                backgroundColor: "#e0e0e0",
+                color: "#333",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
               }}
             >
               Cancel
@@ -259,16 +380,16 @@ function CreateMissionModal({ onClose, onCreate, loading }: CreateMissionModalPr
               type="submit"
               disabled={loading}
               style={{
-                padding: '0.75rem 1.5rem',
-                backgroundColor: '#4CAF50',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                opacity: loading ? 0.6 : 1
+                padding: "0.75rem 1.5rem",
+                backgroundColor: "#4CAF50",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: loading ? "not-allowed" : "pointer",
+                opacity: loading ? 0.6 : 1,
               }}
             >
-              {loading ? 'Creating...' : 'Create Mission'}
+              {loading ? "Creating..." : "Create Mission"}
             </button>
           </div>
         </form>

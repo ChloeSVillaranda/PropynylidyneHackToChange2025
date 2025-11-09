@@ -1,8 +1,5 @@
 import {useState} from 'react';
 import DroneMap from '../components/DroneMap';
-import {Button} from '../components/ui/Button';
-import {Modal} from '../components/ui/Modal';
-
 function Dashboard() {
     const [showModal, setShowModal] = useState(false);
 
@@ -39,11 +36,19 @@ function Dashboard() {
                     ullamco laboris nisi ut aliquip ex ea commodo consequat.
                 </p>
 
-                <Button
+                <button
                     onClick={() => setShowModal(true)}
-                    className='bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-2 rounded-lg'>
+                    style={{
+                        backgroundColor: '#2563eb',
+                        color: 'white',
+                        fontWeight: 500,
+                        padding: '0.5rem 1.5rem',
+                        borderRadius: '0.5rem',
+                        border: 'none',
+                        cursor: 'pointer'
+                    }}>
                     See Drone Types
-                </Button>
+                </button>
             </section>
 
             {showModal && (
@@ -90,11 +95,18 @@ function Dashboard() {
                         </ul>
 
                         <div className='mt-6 text-right'>
-                            <Button
+                            <button
                                 onClick={() => setShowModal(false)}
-                                className='bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded-lg'>
+                                style={{
+                                    backgroundColor: '#374151',
+                                    color: 'white',
+                                    padding: '0.5rem 1rem',
+                                    borderRadius: '0.5rem',
+                                    border: 'none',
+                                    cursor: 'pointer'
+                                }}>
                                 Close
-                            </Button>
+                            </button>
                         </div>
                     </div>
                 </div>
