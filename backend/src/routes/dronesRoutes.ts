@@ -1,11 +1,6 @@
 import { Router } from "express";
 
 import {
-  addImage,
-  listImages,
-  removeImage
-} from "../controllers/droneImagesController.js";
-import {
   createDroneHandler,
   getDrone,
   getDroneDetail,
@@ -26,10 +21,6 @@ router.put("/:id", updateDroneHandler);
 router.delete("/:id", removeDrone);
 router.patch("/:droneId", updateDroneHandler);
 router.get("/:id/location", getDroneLocation);
-
-router.get("/:id/images", listImages);
-router.post("/:id/images", addImage);
-router.delete("/:id/images/:timestamp", removeImage);
 
 export default router;
 
