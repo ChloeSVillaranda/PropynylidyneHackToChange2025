@@ -1,4 +1,7 @@
 import { useEffect, useState } from "react";
+import { Box, Card, Typography, IconButton, Chip, useTheme } from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 import { missionService } from "../api";
 import CreateMissionModal from "../components/CreateMissionModal";
@@ -12,6 +15,9 @@ const missionTypeColors: Record<string, { background: string; color: string }> =
 };
 
 function ManageMissions() {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+
   const [missions, setMissions] = useState<Mission[]>([]);
   const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
@@ -119,87 +125,96 @@ function ManageMissions() {
     };
 
     return (
-      <div
+      <Card
         key={`${mission.missionId}-${mission.droneId}`}
-        style={{
-          border: "1px solid #ddd",
-          borderRadius: "8px",
-          padding: "1rem",
-          backgroundColor: "#f9f9f9",
-          display: "flex",
-          flexDirection: "column",
-          gap: "0.75rem",
+        sx={{
+          p: 3,
+          position: 'relative',
+          background: isDark 
+            ? 'linear-gradient(145deg, rgba(30,41,59,0.7), rgba(15,23,42,0.8))'
+            : 'linear-gradient(145deg, #ffffff, #f8fafc)',
+          border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'}`,
+          borderRadius: 2,
+          transition: 'transform 0.2s, box-shadow 0.2s',
+          '&:hover': {
+            transform: 'translateY(-2px)',
+            boxShadow: isDark 
+              ? '0 8px 25px rgba(0,0,0,0.4)'
+              : '0 8px 25px rgba(0,0,0,0.1)'
+          }
         }}
       >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div>
-            <h4 style={{ margin: 0 }}>Mission #{mission.missionId}</h4>
-            <p style={{ margin: "0.25rem 0", color: "#666", fontSize: "0.9rem" }}>
-              Drone: <strong>{mission.droneId}</strong>
-            </p>
-          </div>
-          <span
-            style={{
-              padding: "0.25rem 0.75rem",
-              borderRadius: "999px",
-              fontSize: "0.75rem",
-              fontWeight: 600,
-              backgroundColor: colorStyles.background,
-              color: colorStyles.color,
+        {/* Action Icons - Now at top right */}
+        <Box sx={{ 
+          position: 'absolute',
+          top: 12,
+          right: 12,
+          display: 'flex',
+          gap: 0.5
+        }}>
+          <IconButton
+            onClick={() => handleViewMission(mission)}
+            size="small"
+            sx={{
+              color: isDark ? '#60a5fa' : '#3b82f6',
+              '&:hover': { bgcolor: isDark ? 'rgba(96,165,250,0.1)' : 'rgba(59,130,246,0.1)' }
             }}
           >
-            {mission.missionType ?? "Unassigned"}
-          </span>
-        </div>
+            <EditIcon fontSize="small" />
+          </IconButton>
+          <IconButton
+            onClick={() => handleDeleteMission(mission)}
+            size="small"
+            disabled={loading}
+            sx={{
+              color: isDark ? '#f87171' : '#ef4444',
+              '&:hover': { bgcolor: isDark ? 'rgba(248,113,113,0.1)' : 'rgba(239,68,68,0.1)' }
+            }}
+          >
+            <DeleteIcon fontSize="small" />
+          </IconButton>
+        </Box>
 
-        <div style={{ display: "grid", gap: "0.5rem" }}>
+        {/* Mission Header */}
+        <Box sx={{ mb: 2 }}>
+          <Typography variant="subtitle2" sx={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)' }}>
+            Mission #{mission.missionId}
+          </Typography>
+          <Typography variant="h6" sx={{ color: isDark ? 'white' : '#1e293b', fontWeight: 600 }}>
+            Drone: {mission.droneId}
+          </Typography>
+        </Box>
+
+        {/* Mission Details */}
+        <Box sx={{ mb: 3 }}>
           {mission.startTime && (
-            <div style={{ fontSize: "0.9rem", color: "#555" }}>
-              <strong>Start:</strong> {new Date(mission.startTime).toLocaleString()}
-            </div>
+            <Typography variant="body2" sx={{ color: isDark ? '#94a3b8' : '#475569', mb: 0.5 }}>
+              Start: {new Date(mission.startTime).toLocaleString()}
+            </Typography>
           )}
           {mission.endTime && (
-            <div style={{ fontSize: "0.9rem", color: "#555" }}>
-              <strong>End:</strong> {new Date(mission.endTime).toLocaleString()}
-            </div>
+            <Typography variant="body2" sx={{ color: isDark ? '#94a3b8' : '#475569', mb: 0.5 }}>
+              End: {new Date(mission.endTime).toLocaleString()}
+            </Typography>
           )}
-          <div style={{ fontSize: "0.9rem", color: "#555" }}>
-            <strong>Waypoints:</strong> {mission.route?.length ?? 0}
-          </div>
-        </div>
+          <Typography variant="body2" sx={{ color: isDark ? '#94a3b8' : '#475569' }}>
+            Waypoints: {mission.route?.length ?? 0}
+          </Typography>
+        </Box>
 
-        <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem" }}>
-          <button
-            onClick={() => handleViewMission(mission)}
-            style={{
-              flex: 1,
-              padding: "0.6rem",
-              borderRadius: "4px",
-              border: "none",
-              backgroundColor: "#2196F3",
-              color: "white",
-              cursor: "pointer",
+        {/* Mission Type - Now at bottom */}
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 'auto' }}>
+          <Chip
+            label={mission.missionType}
+            size="small"
+            sx={{
+              bgcolor: colorStyles.background,
+              color: colorStyles.color,
+              fontWeight: 600
             }}
-          >
-            View &amp; Edit
-          </button>
-          <button
-            onClick={() => handleDeleteMission(mission)}
-            disabled={loading}
-            style={{
-              padding: "0.6rem 1rem",
-              borderRadius: "4px",
-              border: "none",
-              backgroundColor: "#f44336",
-              color: "white",
-              cursor: loading ? "not-allowed" : "pointer",
-              opacity: loading ? 0.6 : 1,
-            }}
-          >
-            Delete
-          </button>
-        </div>
-      </div>
+          />
+        </Box>
+      </Card>
     );
   };
 

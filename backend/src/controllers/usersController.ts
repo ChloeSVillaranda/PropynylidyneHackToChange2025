@@ -54,14 +54,19 @@ export const createUserHandler = async (req: Request, res: Response) => {
     return;
   }
 
+  if (!payload?.password) {
+    res.status(400).json({ message: "password is required" });
+    return;
+  }
+
   const role = normalizeRole(payload.role) ?? "user";
 
   try {
     const user = await createUser({
       email: payload.email,
       fullName: payload.fullName,
+      password: payload.password,
       role,
-      lastLoginAt: payload.lastLoginAt,
       accessLevel: payload.accessLevel,
       metadata: payload.metadata
     });

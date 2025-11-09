@@ -9,6 +9,7 @@ import missionsRouter from "./routes/missionsRoutes.js";
 import usersRouter from "./routes/usersRoutes.js";
 import camerasRouter from "./routes/camerasRoutes.js";
 import chatRouter from "./routes/chatRoutes.js";
+import authRouter from "./routes/auth.js";  // Keep .js for the compiled output
 
 dotenv.config();
 
@@ -47,6 +48,9 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, { explorer: t
 app.get("/health", (_req, res) => {
   res.json({ status: "ok", service: "backend", timestamp: new Date().toISOString() });
 });
+
+// Add auth routes with proper prefix
+app.use("/api/auth", authRouter);
 
 app.use("/drones", dronesRouter);
 app.use("/missions", missionsRouter);
