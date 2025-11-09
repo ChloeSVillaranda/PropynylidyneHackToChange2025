@@ -25,6 +25,9 @@ export type StoredCameraImage = {
   source: string;
   sourceId?: string;
   roadway?: string;
+  direction?: string;
+  latitude?: number;
+  longitude?: number;
   s3Key: string;
   capturedAt: string;
   imageUrl?: string;
